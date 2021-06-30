@@ -1,0 +1,17 @@
+data_directory_path:
+    base_path: data
+    directories: 
+        - inbound
+        - work
+        - error
+        - done
+    sql_scripts: sql_scripts
+db_info:
+    engine: PostgreDBServer
+    server: localhost
+    name: YellowTaxiTrips
+    port: 5432
+    table_name: staging_area.raw{rv_object}file_{ext}
+logger_config_path: config/logger_config.yaml
+flows_path: config/flows.yaml
+

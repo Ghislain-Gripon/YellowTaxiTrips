@@ -1,0 +1,20 @@
+version: 1
+disable_existing_loggers: true
+formatters:
+  simple:
+    format: '%(asctime)s,%(msecs)d - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
+    datefmt: '%d/%m/%Y %H:%M:%S'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple
+    stream: ext://sys.stdout
+  file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: simple
+    filename: ./logs.log
+root:
+  level: DEBUG
+  handlers: [console,file]
