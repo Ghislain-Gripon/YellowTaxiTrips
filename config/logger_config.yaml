@@ -12,9 +12,9 @@ handlers:
     stream: ext://sys.stdout
   file:
     class: logging.FileHandler
-    level: DEBUG
+    level: INFO
     formatter: simple
     filename: ./logs.log
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console,file]
