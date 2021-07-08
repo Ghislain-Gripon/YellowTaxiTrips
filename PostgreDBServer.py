@@ -3,11 +3,12 @@
 
 from DBServer import DBServer
 import sys, psycopg2, logging, DBServerError
+from Decorator import logging_decorator
 
 class PostgreDBServer(DBServer):
 
+    @logging_decorator
     def __init__(self, _config, _password, _user):
-        logging.debug("__init__ starting with {}, {} and user inputed password arguments.".format(_config ,_user))
         super().__init__(_config, _user)
         self.conn = None
 
@@ -25,13 +26,10 @@ class PostgreDBServer(DBServer):
             logging.error(self.log_psycopg2_exception(err))
             self.conn = None
             raise(err)
-        
-        logging.debug("__init__ ended with {} connection object, {} user and config {}".format(self.conn, _user, _config))
-
 
     #Execute an SQL query on the server instance.
+    @logging_decorator
     def execSQL(self, query) -> None:
-        logging.debug("PostgreDBServer.execSQL starting with {}, {} arguments.".format(self, query))
         try:
             with self.conn.cursor() as cur:
                 cur.execute(query)
@@ -79,12 +77,9 @@ class PostgreDBServer(DBServer):
             self.conn.rollback()
             raise Exception(' '.join(err.pgerror))
 
-
-        logging.debug("PostgreDBServer.execSQL ended with {}, {} arguments.".format(self, query))
-
     #Bulk insert csv file at data_path into db_server instance in table_name
+    @logging_decorator
     def copy_from(self, table_name: str, data_path, extension) -> None:
-        logging.debug("PostgreDBServer.copy_from started with {}, {}, {} arguments.".format(self, table_name, data_path))
 
         cur = self.conn.cursor()
         options = {
@@ -151,14 +146,10 @@ class PostgreDBServer(DBServer):
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
-
-        logging.debug("PostgreDBServer.copy_from ended with {}, {}, {} arguments.".format(self, table_name, data_path))
     
+    @logging_decorator
     def get_now(self, ) -> str:
-        logging.debug("Sarting PostgreDBServer.get_now with {} instance.".format(self))
-
         now = ""
-
         logging.info("Fetching current time from database.")
         try:
             with self.conn.cursor() as cur:
@@ -184,26 +175,23 @@ class PostgreDBServer(DBServer):
             self.conn.rollback()
             raise Exception(' '.join(err.args))
         
-        logging.debug("Ending get_now with {} as current database time.".format(now))
         return now
 
     #Closing the connection to the database
+    @logging_decorator
     def closeConn(self, ) -> None:
-        logging.debug("PostgreDBServer.closeConn run on instance {}.".format(self))
         self.conn.close()
-        logging.debug("{} connection closed.".format(self.conn))
         
     # define a function that handles and parses psycopg2 exceptions
+    @logging_decorator
     @staticmethod
     def log_psycopg2_exception(err) -> str:
-        logging.debug("PostgreDBServer.log_psycopg2_exception starting with {}.".format(err))
         # get details about the exception
         err_type, err_obj, traceback = sys.exc_info()
 
         # get the line number when exception occured
         line_num = traceback.tb_lineno
         prompt_err = "Psycopg2 ERROR: ", err, "on line number: ", line_num, " traceback: ", traceback, "-- type: ", err_type, " extensions.Diagnostics: ", err.diag, " pgerror: ", err.pgerror, " pgcode: ", err.pgcode, "value: ", err_obj
-        logging.debug("PostgreDBServer.log_psycopg2_exception ended with {}, {}.".format(err, prompt_err))
         return prompt_err
 
 

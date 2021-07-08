@@ -1,8 +1,7 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 import logging, DBServerError, re, pathlib, typing
-
-from psycopg2 import extensions
+from Decorator import logging_decorator
 from PostgreDBServer import PostgreDBServer
 from FolderStructure import FolderStructure
 from getpass import getpass
@@ -16,6 +15,7 @@ from getpass import getpass
 
 class Workflow:
 
+    @logging_decorator
     def __init__(self, _FileHandler:FolderStructure):
         self.FileHandler = _FileHandler
 
@@ -24,6 +24,7 @@ class Workflow:
         self.db_server = None
         self.run_flow()   
     
+    @logging_decorator
     def run_flow(self, ) -> None:
         logging.debug("Running flows from flow file.")
 
@@ -156,6 +157,7 @@ class Workflow:
 
         self.db_server.closeConn()
     
+    @logging_decorator
     @staticmethod
     def request_info() -> typing.Tuple[str,str]:
         logging.debug("Workflow.request_info starting.")
@@ -164,6 +166,7 @@ class Workflow:
         logging.debug("Workflow.request_info with username : {}".format(username))
         return username, password
 
+    @logging_decorator
     def get_connection(self, ):
         logging.debug("Workflow.get_connection with {} arguments.".format(self, self.config))
 
