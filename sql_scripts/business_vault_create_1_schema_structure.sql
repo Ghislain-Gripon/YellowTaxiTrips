@@ -13,6 +13,5 @@ BEGIN
 
     CREATE SCHEMA IF NOT EXISTS business_vault;
     CREATE EXTENSION IF NOT EXISTS pgcrypto;
-    COMMIT;
 
 END $$;

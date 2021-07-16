@@ -5,24 +5,17 @@ CREATE TABLE IF NOT EXISTS staging_area.rawpaymenttypesfile_csv (
 	paymenttype_name varchar NULL
 );
 
-
--- staging_area.rawratecodeidsfile_csv definition
-
--- Drop table
-
--- DROP TABLE staging_area.rawratecodeidsfile_csv;
+CREATE TABLE IF NOT EXISTS staging_area.rawtimedim (
+	timeid varchar NULL,
+	"hour" varchar NULL,
+	"day" varchar NULL,
+	timestring varchar NULL
+);
 
 CREATE TABLE IF NOT EXISTS staging_area.rawratecodeidsfile_csv (
 	ratecodeid varchar NULL,
 	ratecodename varchar NULL
 );
-
-
--- staging_area.rawtripsfile_csv definition
-
--- Drop table
-
--- DROP TABLE staging_area.rawtripsfile_csv;
 
 CREATE TABLE IF NOT EXISTS staging_area.rawtripsfile_csv (
 	vendorid varchar NULL,
@@ -44,24 +37,10 @@ CREATE TABLE IF NOT EXISTS staging_area.rawtripsfile_csv (
 	total_amount varchar NULL
 );
 
-
--- staging_area.rawvendorsfile_csv definition
-
--- Drop table
-
--- DROP TABLE staging_area.rawvendorsfile_csv;
-
 CREATE TABLE IF NOT EXISTS staging_area.rawvendorsfile_csv (
 	vendorid varchar NULL,
 	vendorname varchar NULL
 );
-
-
--- staging_area.rawzonesfile_csv definition
-
--- Drop table
-
--- DROP TABLE staging_area.rawzonesfile_csv;
 
 CREATE TABLE IF NOT EXISTS staging_area.rawzonesfile_csv (
 	zoneid varchar NULL,
