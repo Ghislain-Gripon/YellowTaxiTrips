@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import pathlib, logging, logging.config, yaml, re, typing
+import pathlib, logging, logging.config, yaml, re, typing, boto3, urllib, botocore, json
 from Decorator import logging_decorator
 
 #class description here
@@ -13,102 +13,102 @@ from Decorator import logging_decorator
 #class version : local file system
 class FolderStructure:
 
+    config_bucket = "postgretaxiconfig"
     config_file_path = "config/config.yaml"
 
     @logging_decorator
-    def __init__(self, root_path):
-        self.root_path = root_path
-        self.file_directories = {}
-        self.config = self.load(self.get_file(self.config_file_path))
+    def __init__(self, ):
+
+        self.config = self.get_file(self.config_bucket, self.config_file_path)['execution_environment'][self.config['environment']]
         self.flows = None
         
         if(self.config is None):
             logging.error("Configuration dictonnary is null, check file location at {}".format(self.config_file_path))
             raise ValueError("Configuration dictonnary is null on {} instance.".format(self))
-        with open(self.config["logger_config_path"]) as f:
-            logging.config.dictConfig(yaml.load(f, Loader=yaml.SafeLoader))
-        logging.info("Loaded logger yaml configuration at {}".format(self.config["logger_config_path"]))
-        self.flows = self.load(self.get_file(self.config["flows_path"]))
+
+        logger_config_directory = self.config['data_directory_path']['config']['directories']['config']
+        logger_config_filename = self.config['data_directory_path']['config']['files']['logger_config_path']
+        
+        logging.config.dictConfig(self.read_yaml(self.config_bucket, '{}/{}'.format(logger_config_directory, logger_config_filename) ))
+
+        logging.info("Loaded logger yaml configuration at {}".format('{}/{}'.format(logger_config_directory, logger_config_filename) ))
+
+        flows_config_directory = self.config['data_directory_path']['config']['directories']['flows']
+        flows_config_filename = self.config['data_directory_path']['config']['files']['flows_path']
+
+        self.flows = self.read_yaml(self.config_bucket, '{}/{}'.format(flows_config_directory, flows_config_filename))
+
         if(self.flows is None):
-            logging.error("Flows dictonnary is null, check file location at {}".format(self.config["flows_path"]))
+            logging.error("Flows dictonnary is null, check file location at {}".format('{}/{}'.format(flows_config_directory, flows_config_filename) ))
             raise ValueError("Flows dictonnary is null on {} instance.".format(self))
-        for directory in self.config["data_directory_path"]["directories"]:
-            file_directory:pathlib.Path = self.root_path / pathlib.Path(self.config["data_directory_path"]["base_path"]) / directory
-            pathlib.Path(file_directory).mkdir(parents=True, exist_ok=True)
-            self.file_directories[directory] = file_directory
-            logging.debug("File directory {} loaded.".format(file_directory))
-        logging.info("File directories set up.")
 
     #file_path is the pathlib.Path object to the file that is to be moved
     #directory_name is the nmae of the directory the file is to be moved to among those in
     #config["data_directory_path"]["directories"], so inbound, work, error, done
     @logging_decorator
-    def Move_To_Directory(self, file_path, directory_name) -> pathlib.Path:    
+    def Move_To_Directory(self, bucket:str, directory:str, key:str) -> pathlib.Path:
         moved_file = None
         try:
-            file_path = pathlib.Path(file_path)
-            logging.debug("Moving {} to {}".format(file_path, self.file_directories[directory_name] / file_path.name))
-            pathlib.Path.rename(file_path, self.file_directories[directory_name] / file_path.name)
-            moved_file = pathlib.Path(self.file_directories[directory_name] / file_path.name)
-            logging.info("Moved {} to {}".format(file_path.name, moved_file.parent))
-        except FileNotFoundError as err:
-            logging.error("Could not move the file, {} occured.".format(err))
-            raise FileNotFoundError("File not found : {}".format(err.args))
-        except PermissionError as err:
-            logging.error("Could not move the file, {} occured.".format(err))
-            raise PermissionError("Access denied, permission failed : {}".format(err.args))
-        except Exception as err:
-            logging.error("An error occured : {}".format(err.args))
-            raise Exception("An unknown error occured : {}".format(err.args))
-        return moved_file
+            key:str = urllib.parse.unquote(key)
+            raw_key:str = pathlib.Path(key).name    
+            s3 = boto3.client(service_name='s3',region_name='eu-west-3')
+            s3.copy_object(
+                Bucket= bucket,
+                CopySource= '{}/{}'.format(bucket, key),
+                Key= '{}/{}'.format(directory, raw_key),
+            )
+            s3.delete_object(
+                Bucket= bucket,
+                Key= key
+            )
 
-    #Fetch list of files in Inbound directory
-    @logging_decorator
-    def get_Inbound_List(self, regex) -> typing.List[pathlib.Path]:
-        inbound:pathlib.Path = self.file_directories["inbound"]
-        file_list = []
-        logging.info("Fetching list of files in inbound.")
-        [file_list.append(i) for i in inbound.iterdir() if re.search(regex, i.name) is not None]
-        return file_list
-    
-    #Checks for a file at file_path
-    @logging_decorator
-    def check_for_file(self, file_path) -> bool:
-        is_file:bool = pathlib.Path.is_file(file_path)
-        return is_file
+            moved_file:str = '{}/{}/{}'.format(bucket, directory, raw_key)
+        
+        except Exception as e:
+            print("Error on move_directory({},{},{})".format(bucket, directory, key))
+            print(e)
+            raise e
+        
+        return pathlib.Path(moved_file)
 
     #Main function of the class, enacts all its duties of class instancing and call making.
     @logging_decorator
-    def load(self, file_path) -> dict:
-        file_exists:bool = self.check_for_file(file_path)
-        if(not file_exists):
-            logging.warning("No file located at {}".format(file_path))
-            raise FileNotFoundError("{} does not exist.".format(file_path))
-        logging.info("Reading {}, forwarding python yaml dict.".format(file_path))
-        _file = self.read_yaml(file_path)
+    def load(self, bucket, key):
+        _file = None
+        try:
+            raw_key = urllib.parse.unquote(key)
+            s3 = boto3.client(service_name='s3',region_name='eu-west-3')
+            file_streaming = s3.get_object(
+                Bucket= bucket,
+                Key= raw_key
+                )['Body']
+            
+            _file = file_streaming
+
+        except Exception as e:
+            print("Error on load({},{})".format(bucket, key))
+            print(e)
+            raise e
+
         return _file
 
     #read the config from disk in local directory specified in class attribute file_path
     @logging_decorator
-    def read_yaml(self, file_path) -> dict:
+    def read_yaml(self, bucket, key):
         _file = None
         try:
-            with open(file_path) as yaml_file:
-                _file = yaml.load(yaml_file, Loader=yaml.SafeLoader)
+            _file = yaml.load(self.load(bucket, key), Loader=yaml.SafeLoader)
             logging.info("YAML configuration file successfully read.")
         #catch a yaml related error to inform user of problem with config file
-        except FileNotFoundError:
-            logging.error("YAML file at {} couldn't be decoded.".format(file_path))
+        
+        except Exception as e:
+            logging.error(str(e) + ", ({},{},{})".format(key, bucket))
             _file = None
-        except PermissionError:
-            logging.exception("Can not access {}, permission denied.".format(file_path))
-        except:
-            logging.error("File reading error.")
-            _file = None
+            raise e
         return _file
 
     @logging_decorator
-    def get_config(self, config_type) -> dict:
+    def get_config(self, config_type):
         config = None
         if config_type == "config":
             config = self.config
@@ -117,8 +117,6 @@ class FolderStructure:
         return config
 
     @logging_decorator
-    def get_file(self, file_name) -> pathlib.Path:
-        path = pathlib.Path(self.root_path) / file_name
-        if not self.check_for_file(path):
-            raise FileNotFoundError("There is not file at {}".format(path))
-        return path
+    def get_file(self, bucket, key):
+        _file = self.load(bucket, key).read()
+        return _file

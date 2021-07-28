@@ -9,11 +9,11 @@
 #use getattr(import_module(config["db_info"]["engine"]),config["db_info"]["engine"])
 class DBServer:
     
-    def __init__(self, _config, _user):
-        self.endpoint = _config["db_info"]["server"]
-        self.db_name = _config["db_info"]["name"]
-        self.db_user = _user
-        self.port = _config["db_info"]["port"]
+    def __init__(self, secret):
+        self.endpoint = secret['host']
+        self.db_name = secret['dbname']
+        self.db_user = secret['username']
+        self.port = secret['port']
         
 
     def execSQL(self, query) -> None:

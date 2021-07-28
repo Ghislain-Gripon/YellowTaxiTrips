@@ -8,8 +8,8 @@ from Decorator import logging_decorator
 class PostgreDBServer(DBServer):
 
     @logging_decorator
-    def __init__(self, _config, _password, _user):
-        super().__init__(_config, _user)
+    def __init__(self, secret):
+        super().__init__(secret)
         self.conn = None
 
         try:
@@ -17,7 +17,7 @@ class PostgreDBServer(DBServer):
                 host=self.endpoint,
                 dbname=self.db_name,
                 user=self.db_user,
-                password=_password,
+                password=secret['password'],
                 port=self.port)
             self.conn.autocommit = True
             logging.info("Established connection with the database of PostgreDBServer type with autocommit.")
@@ -79,18 +79,12 @@ class PostgreDBServer(DBServer):
 
     #Bulk insert csv file at data_path into db_server instance in table_name
     @logging_decorator
-    def copy_from(self, table_name: str, data_path, extension) -> None:
-
+    def copy_from(self, table_name, data_path, iam_role):
         cur = self.conn.cursor()
-        options = {
-            "txt": "TEXT",
-            "csv": "CSV HEADER DELIMITER AS ','"
-        }
-        SQL_STATEMENT = "COPY {} FROM STDIN WITH {}"
+        SQL_STATEMENT = "COPY {} FROM {} WITH CSV HEADER DELIMITER AS ',' iam-role '{}'"
 
         try:
-            with open(data_path, 'r', encoding='ascii', errors='ignore') as f: #file stream on data_path for the STDIN canal of the COPY FROM postgre command
-                cur.copy_expert(sql = SQL_STATEMENT.format(table_name, options[extension]), file=f)
+            cur.execSQL(SQL_STATEMENT.format(table_name, data_path ,iam_role))
             logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.db_name, table_name, type(self).__name__))
 
         except psycopg2.OperationalError as err:
@@ -179,13 +173,13 @@ class PostgreDBServer(DBServer):
 
     #Closing the connection to the database
     @logging_decorator
-    def closeConn(self, ) -> None:
+    def closeConn(self, ):
         self.conn.close()
         
     # define a function that handles and parses psycopg2 exceptions
     @logging_decorator
     @staticmethod
-    def log_psycopg2_exception(err) -> str:
+    def log_psycopg2_exception(err):
         # get details about the exception
         err_type, err_obj, traceback = sys.exc_info()
 

@@ -48,8 +48,6 @@ flows:
       - raw_vault_load_16_linktrips.sql
   - name: rv_to_bv
     type: inner_database_flux
-    time_start: '2018-01-01'
-    time_end: '2019-01-01'
     bv_drop_trigger: 0
     sql: 
       - business_vault_create_1_schema_structure.sql
