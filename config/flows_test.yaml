@@ -1,9 +1,0 @@
-- name: sa_to_rv
-  type: inner_database_flux
-  sql:
-    - create_raw_vault_structure.sql
-- name: zones_to_rv
-  type: file_to_rv
-  rv_object: zones # f"raw{dv_object}file"
-  file_regex: "^zones_.+$"
-  

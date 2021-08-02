@@ -2,42 +2,39 @@
 #-*- coding: utf-8 -*-
 
 from DBServer import DBServer
-import sys, psycopg2, logging, DBServerError, typing
+import sys, psycopg2, logging, DBServerError, base64, boto3
+from botocore.exceptions import ClientError
 from Decorator import logging_decorator
-from getpass import getpass
 
-class PostgreDBServer(DBServer):
+class RedshiftDBServer(DBServer):
+    __database_type__ = 'Redshift'
 
     @logging_decorator
     def __init__(self, _config):
-        super().__init__(_config)
+        super.__init__(_config)
         self.conn = None
-
-        _user, _password = self._request_info()
+        secret = self._get_secret()
+        self.db_name = secret['dbname']
+        self.endpoint = secret['host']
+        self.user = secret['username']
+        self.port = secret['port']
+        self.iam_role = secret['redshift_role']
 
         try:
             self.conn = psycopg2.connect(
-                host= self.config['db_info']['server'],
-                dbname= self.config['db_info']['name'],
-                user= _user,
-                password= _password,
-                port= self.config['db_info']['port'])
+                host= self.endpoint,
+                dbname= self.db_name,
+                user= self.user,
+                password= secret['password'],
+                port= self.port
+            )
             self.conn.autocommit = True
-            logging.info("Established connection with the database of PostgreDBServer type with autocommit.")
+            logging.info("Established connection with the {} database with autocommit.".format(self.config['db_info']['engine']))
 
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
             self.conn = None
             raise(err)
-
-    @logging_decorator
-    @staticmethod
-    def _request_info() -> typing.Tuple[str,str]:
-        logging.debug("Workflow.request_info starting.")
-        username:str = input('Username: ')
-        password:str = getpass()
-        logging.debug("Workflow.request_info with username : {}".format(username))
-        return username, password
 
     #Execute an SQL query on the server instance.
     @logging_decorator
@@ -91,19 +88,13 @@ class PostgreDBServer(DBServer):
 
     #Bulk insert csv file at data_path into db_server instance in table_name
     @logging_decorator
-    def copy_from(self, table_name: str, data_path, extension) -> None:
-
+    def copy_from(self, table_name, data_path):
         cur = self.conn.cursor()
-        options = {
-            "txt": "TEXT",
-            "csv": "CSV HEADER DELIMITER AS ','"
-        }
-        SQL_STATEMENT = "COPY {} FROM STDIN WITH {}"
+        SQL_STATEMENT = "COPY {} FROM {} WITH CSV HEADER DELIMITER AS ',' iam-role '{}'"
 
         try:
-            with open(data_path, 'r', encoding='ascii', errors='ignore') as f: #file stream on data_path for the STDIN canal of the COPY FROM postgre command
-                cur.copy_expert(sql = SQL_STATEMENT.format(table_name, options[extension]), file=f)
-            logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.db_name, table_name, type(self).__name__))
+            cur.execSQL(SQL_STATEMENT.format(table_name, data_path, self.iam_role))
+            logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.db_name, table_name, self.__database_type__))
 
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
@@ -189,15 +180,65 @@ class PostgreDBServer(DBServer):
         
         return now
 
+    @logging_decorator
+    def _get_secret(self, ):
+        secret_name = self.config['db_info']['secret_name']
+        
+
+        # Create a Secrets Manager client
+        session = boto3.session.Session()
+        client = session.client(
+            service_name= 'secretsmanager',
+            region_name= self.config['region']
+        )
+
+        # In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
+        # See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        # We rethrow the exception by default.
+
+        try:
+            get_secret_value_response = client.get_secret_value(
+                SecretId=secret_name
+            )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'DecryptionFailureException':
+                # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+                # An error occurred on the server side.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response['Error']['Code'] == 'InvalidParameterException':
+                # You provided an invalid value for a parameter.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response['Error']['Code'] == 'InvalidRequestException':
+                # You provided a parameter value that is not valid for the current state of the resource.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+            elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+                # We can't find the resource that you asked for.
+                # Deal with the exception here, and/or rethrow at your discretion.
+                raise e
+        else:
+            # Decrypts secret using the associated KMS CMK.
+            # Depending on whether the secret is a string or binary, one of these fields will be populated.
+            if 'SecretString' in get_secret_value_response:
+                secret = get_secret_value_response['SecretString']
+            else:
+                secret = str(base64.b64decode(get_secret_value_response['SecretBinary']))
+            return secret
+
     #Closing the connection to the database
     @logging_decorator
-    def closeConn(self, ) -> None:
+    def closeConn(self, ):
         self.conn.close()
         
     # define a function that handles and parses psycopg2 exceptions
     @logging_decorator
     @staticmethod
-    def _log_psycopg2_exception(err) -> str:
+    def _log_psycopg2_exception(err):
         # get details about the exception
         err_type, err_obj, traceback = sys.exc_info()
 

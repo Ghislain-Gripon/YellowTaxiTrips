@@ -1,4 +1,5 @@
-import logging, pathlib
+import logging, pathlib, urllib
+from FolderStructureAWS import FolderStructureAWS
 from FolderStructure import FolderStructure
 from Workflow import Workflow
 
@@ -6,8 +7,9 @@ def lambda_handler(event, context):
     
     logging.basicConfig(format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s', level=logging.INFO)
     logging.info("Launching configuration procedures.")
-    FileHandler = FolderStructure()
-    Workflow(FileHandler, event['Records'][0]['s3']['bucket']['name'], event['Records'][0]['s3']['object']['key'])
+
+    FileHandler:FolderStructure = FolderStructureAWS(config_bucket = "postgretaxiconfig", config_file_path = "config/config.yaml")
+    Workflow(FileHandler, event['Records'][0]['s3']['bucket']['name'], urllib.parse.unquote(event['Records'][0]['s3']['object']['key']))
     
 
 if __name__ == "__main__":
