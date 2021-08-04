@@ -1,8 +1,9 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 
+from os import path
 from DBServer import DBServer
-import sys, psycopg2, logging, DBServerError, typing
+import sys, psycopg2, logging, DBServerError, pathlib
 from Decorator import logging_decorator
 from getpass import getpass
 
@@ -13,6 +14,7 @@ class PostgreDBServer(DBServer):
         super().__init__(_config)
         self.conn = None
 
+        logging.info("Requesting username and password of database.")
         _user, _password = self._request_info()
 
         try:
@@ -32,7 +34,7 @@ class PostgreDBServer(DBServer):
 
     @logging_decorator
     @staticmethod
-    def _request_info() -> typing.Tuple[str,str]:
+    def _request_info():
         logging.debug("Workflow.request_info starting.")
         username:str = input('Username: ')
         password:str = getpass()
@@ -91,7 +93,7 @@ class PostgreDBServer(DBServer):
 
     #Bulk insert csv file at data_path into db_server instance in table_name
     @logging_decorator
-    def copy_from(self, table_name: str, data_path, extension) -> None:
+    def copy_from(self, table_name, data_path) -> None:
 
         cur = self.conn.cursor()
         options = {
@@ -102,7 +104,7 @@ class PostgreDBServer(DBServer):
 
         try:
             with open(data_path, 'r', encoding='ascii', errors='ignore') as f: #file stream on data_path for the STDIN canal of the COPY FROM postgre command
-                cur.copy_expert(sql = SQL_STATEMENT.format(table_name, options[extension]), file=f)
+                cur.copy_expert(sql = SQL_STATEMENT.format(table_name, options[pathlib.Path(data_path).suffix]), file=f)
             logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.db_name, table_name, type(self).__name__))
 
         except psycopg2.OperationalError as err:

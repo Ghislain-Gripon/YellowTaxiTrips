@@ -15,14 +15,13 @@ class RedshiftDBServer(DBServer):
         self.conn = None
         secret = self._get_secret()
         self.db_name = secret['dbname']
-        self.endpoint = secret['host']
         self.user = secret['username']
         self.port = secret['port']
         self.iam_role = secret['redshift_role']
 
         try:
             self.conn = psycopg2.connect(
-                host= self.endpoint,
+                host= self._get_endpoint(secret['dbClusterIdentifier']),
                 dbname= self.db_name,
                 user= self.user,
                 password= secret['password'],
@@ -88,7 +87,7 @@ class RedshiftDBServer(DBServer):
 
     #Bulk insert csv file at data_path into db_server instance in table_name
     @logging_decorator
-    def copy_from(self, table_name, data_path):
+    def copy_from(self, table_name, data_path) -> None:
         cur = self.conn.cursor()
         SQL_STATEMENT = "COPY {} FROM {} WITH CSV HEADER DELIMITER AS ',' iam-role '{}'"
 
@@ -229,6 +228,22 @@ class RedshiftDBServer(DBServer):
             else:
                 secret = str(base64.b64decode(get_secret_value_response['SecretBinary']))
             return secret
+    
+    @logging_decorator
+    def _get_endpoint(self, cluster_identifier):
+        session = boto3.session.Session()
+        client = session.client(
+            service_name= 'redshift',
+            region_name= self.config['region']
+        )
+
+        response = client.describe_clusters(
+            ClusterIdentifier = cluster_identifier
+        )['Clusters'][0]['ClusterNodes']
+
+        for node in response:
+            if node['NodeRole'] in ('SHARED', 'LEADER'):
+                return node['PrivateIPAddress']
 
     #Closing the connection to the database
     @logging_decorator

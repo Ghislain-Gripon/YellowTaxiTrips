@@ -58,7 +58,7 @@ class Workflow:
                     try:
                         file_new_path = self.FileHandler.Move_To_Directory(self.bucket, 'work', self.key)                 
                         try:
-                            self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path, self.get_secret()['redshift'])
+                            self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
                                 
                         except DBServerError.DataError as err:
                             logging.error("Error type : " + type(err).__name__, err.args)  

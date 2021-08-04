@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import pathlib, logging, logging.config, yaml, re, typing
+import pathlib, logging, logging.config, yaml, re
+from sys import path
 from Decorator import logging_decorator
 
 #class description here
@@ -11,13 +12,14 @@ from Decorator import logging_decorator
 #request the file to be copied locally then return the path to the copy from the S3 bucket
 
 #class version : local file system
-class FolderStructure:
-
-    config_file_path = "config/config.yaml"
+class FolderStructureLocal:
 
     @logging_decorator
     def __init__(self, environment:str, **kwargs):
-        self.root_path = kwargs['root_path']
+        self.root_path:pathlib.Path = kwargs.get('root_path')
+        if self.root_path is None:
+            self.root_path:pathlib.Path = pathlib.Path.cwd()
+        self.config_file_path:str = kwargs['config_file_path']
         self.file_directories = {}
         self.config = self.load(self.get_file(self.config_file_path))['execution_environment'][environment]
         self.flows = None
@@ -64,7 +66,7 @@ class FolderStructure:
 
     #Fetch list of files in Inbound directory
     @logging_decorator
-    def get_Inbound_List(self, regex) -> typing.List[pathlib.Path]:
+    def get_Inbound_List(self, regex):
         inbound:pathlib.Path = self.file_directories["inbound"]
         file_list = []
         logging.info("Fetching list of files in inbound.")
@@ -79,24 +81,33 @@ class FolderStructure:
 
     #Main function of the class, enacts all its duties of class instancing and call making.
     @logging_decorator
-    def load(self, file_path) -> dict:
+    def load(self, file_path):
         file_exists:bool = self._check_for_file(file_path)
         if(not file_exists):
             logging.warning("No file located at {}".format(file_path))
             raise FileNotFoundError("{} does not exist.".format(file_path))
-        logging.info("Reading {}, forwarding python yaml dict.".format(file_path))
-        _file = self.read_yaml(file_path)
-        return _file
+
+        if pathlib.Path(file_path).suffix == '.yaml':
+            return self.read_yaml(file_path)
+        else:
+            return self._get_file(file_path)
+        
 
     #read the config from disk in local directory specified in class attribute file_path
     @logging_decorator
     def read_yaml(self, file_path) -> dict:
+        """
+        
+        """
+
         file_exists:bool = self._check_for_file(file_path)
+
         if(not file_exists):
             logging.warning("No file located at {}".format(file_path))
             raise FileNotFoundError("{} does not exist.".format(file_path))
         logging.info("Reading {}, forwarding python yaml dict.".format(file_path))
         _file = None
+
         try:
             with open(file_path) as yaml_file:
                 _file = yaml.load(yaml_file, Loader=yaml.SafeLoader)
@@ -110,23 +121,28 @@ class FolderStructure:
         except:
             logging.error("File reading error.")
             _file = None
+
         return _file
 
     @logging_decorator
-    def get_config(self, config_type) -> dict:
-        config = None
-        if config_type == "config":
-            config = self.config
-        if config_type == "flows":
-            config = self.flows
-        return config
+    def get_config(self, ) -> dict:
+        return self.config
 
     @logging_decorator
-    def get_file(self, file_name) -> pathlib.Path:
+    def get_flows(self, ) -> dict:
+        return self.flows
+
+    @logging_decorator
+    def _get_file(self, file_name):
+        """
+        Returns the file at file_name from the root_path, by default the current working directory.
+        """
         _file = None
-        path = pathlib.Path(self.root_path) / file_name
-        if not self.check_for_file(path):
+        path:pathlib.Path = pathlib.Path(self.root_path) / file_name
+        if self.check_for_file(path):
+            with open(path, 'r') as f:
+                _file = f.read()
+        else:
             raise FileNotFoundError("There is not file at {}".format(path))
-        with open(path, 'r') as f:
-            _file = f.read()
+
         return _file

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 from io import FileIO
-import pathlib, logging, logging.config, yaml, typing, boto3, urllib
+import pathlib, logging, logging.config, yaml, typing, boto3, urllib, re
 from Decorator import logging_decorator
 from FolderStructure import FolderStructure
 
@@ -42,8 +42,8 @@ class FolderStructureAWS(FolderStructure):
             logging.error("Flows dictonnary is null, check file location at {}".format('{}/{}'.format(flows_config_directory, flows_config_filename) ))
             raise ValueError("Flows dictonnary is null on {} instance.".format(self))
 
-        self.bucket = kwargs['bucket']
-        self.key = kwargs['key']
+        self.bucket = kwargs['event']['Records'][0]['s3']['bucket']['name']
+        self.key = urllib.parse.unquote(kwargs['event']['Records'][0]['s3']['object']['key'])
 
     #file_path is the pathlib.Path object to the file that is to be moved
     #directory_name is the nmae of the directory the file is to be moved to among those in
@@ -76,7 +76,7 @@ class FolderStructureAWS(FolderStructure):
 
     #Main function of the class, enacts all its duties of class instancing and call making.
     @logging_decorator
-    def load(self, file_path) -> FileIO:
+    def load(self, file_path):
         file_streaming:typing.BinaryIO = None
         raw_keys = pathlib.Path(urllib.parse.unquote(file_path)).parts
         directory:str = raw_keys[1]
@@ -122,3 +122,11 @@ class FolderStructureAWS(FolderStructure):
     @logging_decorator
     def get_flows(self, ) -> dict:
         return self.flows
+    
+    @logging_decorator
+    def get_Inbound_List(self, regex):
+        file_list = None
+        if re.search(self.key, regex) is not None:
+            file_list = ['{}/{}'.format(self.bucket, self.key)]
+        logging.info("Fetching list of files in inbound.")
+        return file_list
