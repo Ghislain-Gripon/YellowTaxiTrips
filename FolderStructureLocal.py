@@ -1,6 +1,10 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import pathlib, logging, logging.config, yaml, re
+import pathlib
+import logging
+import logging.config
+import yaml
+import re
 from sys import path
 from Decorator import logging_decorator
 

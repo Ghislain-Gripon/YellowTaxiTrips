@@ -1,7 +1,8 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import logging, DBServerError, re, typing
-
+import logging
+import DBServerError
+import re
 from Decorator import logging_decorator
 from PostgreDBServer import PostgreDBServer
 from RedshiftDBServer import RedshiftDBServer
@@ -21,8 +22,8 @@ from getpass import getpass
 class Workflow:
 
     @logging_decorator
-    def __init__(self, _FileHandler, **kwargs):
-        self.FileHandler = _FileHandler
+    def __init__(self, _FileHandler):
+        self.FileHandler:FolderStructure = _FileHandler
 
         self.config:dict = self.FileHandler.get_config()
         self.flows:dict = self.FileHandler.get_flows()
@@ -48,6 +49,8 @@ class Workflow:
             logging.debug("Flow of type : {}".format(flow_type))
 
             if flow_type == "file_to_rv":
+
+                    file_list = self.FileHandler.get_Inbound_List(flow["file_regex"])
 
                     file_new_path = ""
                     try:

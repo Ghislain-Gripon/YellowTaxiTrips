@@ -3,7 +3,11 @@
 
 from os import path
 from DBServer import DBServer
-import sys, psycopg2, logging, DBServerError, pathlib
+import sys
+import psycopg2
+import logging
+import DBServerError
+import pathlib
 from Decorator import logging_decorator
 from getpass import getpass
 
@@ -97,8 +101,8 @@ class PostgreDBServer(DBServer):
 
         cur = self.conn.cursor()
         options = {
-            "txt": "TEXT",
-            "csv": "CSV HEADER DELIMITER AS ','"
+            "txt": "TEXT DELIMITER '|'",
+            "csv": "CSV HEADER DELIMITER ','"
         }
         SQL_STATEMENT = "COPY {} FROM STDIN WITH {}"
 

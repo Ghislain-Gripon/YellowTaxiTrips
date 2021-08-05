@@ -1,7 +1,13 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-from io import FileIO
-import pathlib, logging, logging.config, yaml, typing, boto3, urllib, re
+import pathlib
+import logging
+import logging.config
+import yaml
+import typing
+import boto3
+import urllib
+import re
 from Decorator import logging_decorator
 from FolderStructure import FolderStructure
 
@@ -20,7 +26,7 @@ class FolderStructureAWS(FolderStructure):
 
         self.flows = None
         self.config = None
-        self.config = self.get_file(kwargs['config_bucket'], kwargs['config_file_path'])['execution_environment'][environment]
+        self.config = self.load('{}/{}'.format(kwargs['config_bucket'], kwargs['config_file_path']))['execution_environment'][environment]
         
         if(self.config is None):
             logging.error("Configuration dictonnary is null, check file location at {}".format(self.config_file_path))
@@ -29,14 +35,14 @@ class FolderStructureAWS(FolderStructure):
         logger_config_directory = self.config['data_directory_path']['config']['directories']['config']
         logger_config_filename = self.config['data_directory_path']['config']['files']['logger_config_path']
         
-        logging.config.dictConfig(self.read_yaml(self.config_bucket, '{}/{}'.format(logger_config_directory, logger_config_filename) ))
+        logging.config.dictConfig(self.load('{}/{}/{}'.format(self.config_bucket, logger_config_directory, logger_config_filename) ))
 
         logging.info("Loaded logger yaml configuration at {}".format('{}/{}'.format(logger_config_directory, logger_config_filename) ))
 
         flows_config_directory = self.config['data_directory_path']['config']['directories']['flows']
         flows_config_filename = self.config['data_directory_path']['config']['files']['flows_path']
 
-        self.flows = self.read_yaml(kwargs['config_bucket'], '{}/{}'.format(flows_config_directory, flows_config_filename))
+        self.flows = self.load('{}/{}/{}'.format(kwargs['config_bucket'], flows_config_directory, flows_config_filename))
 
         if(self.flows is None):
             logging.error("Flows dictonnary is null, check file location at {}".format('{}/{}'.format(flows_config_directory, flows_config_filename) ))
@@ -49,7 +55,7 @@ class FolderStructureAWS(FolderStructure):
     #directory_name is the nmae of the directory the file is to be moved to among those in
     #config["data_directory_path"]["directories"], so inbound, work, error, done
     @logging_decorator
-    def Move_To_Directory(self, file_path:str, directory_name:str) -> pathlib.Path:
+    def Move_To_Directory(self, file_path:str, directory_name:str):
         moved_file = None
         try:
             file_path:str = urllib.parse.unquote(file_path)
@@ -72,20 +78,20 @@ class FolderStructureAWS(FolderStructure):
             print(e)
             raise e
         
-        return pathlib.Path(moved_file)
+        return moved_file
 
     #Main function of the class, enacts all its duties of class instancing and call making.
     @logging_decorator
     def load(self, file_path):
-        file_streaming:typing.BinaryIO = None
+        file_streaming = None
         raw_keys = pathlib.Path(urllib.parse.unquote(file_path)).parts
-        directory:str = raw_keys[1]
-        raw_key:str = raw_keys[2]
+        directory:str = '/'.join(raw_keys[1:len(raw_keys)-1])
+        raw_key:str = raw_keys[len(raw_keys)-1]
         bucket:str = raw_keys[0]
 
         try:
             s3 = boto3.client(service_name='s3',region_name='eu-west-3')
-            file_streaming:typing.BinaryIO = s3.get_object(
+            file_streaming = s3.get_object(
                 Bucket= bucket,
                 Key= '{}/{}'.format(directory,raw_key)
                 )['Body']

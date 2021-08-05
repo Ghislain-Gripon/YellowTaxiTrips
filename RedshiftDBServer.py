@@ -2,7 +2,12 @@
 #-*- coding: utf-8 -*-
 
 from DBServer import DBServer
-import sys, psycopg2, logging, DBServerError, base64, boto3
+import sys
+import psycopg2
+import logging
+import DBServerError
+import base64
+import boto3
 from botocore.exceptions import ClientError
 from Decorator import logging_decorator
 
@@ -89,7 +94,7 @@ class RedshiftDBServer(DBServer):
     @logging_decorator
     def copy_from(self, table_name, data_path) -> None:
         cur = self.conn.cursor()
-        SQL_STATEMENT = "COPY {} FROM {} WITH CSV HEADER DELIMITER AS ',' iam-role '{}'"
+        SQL_STATEMENT = "COPY {} FROM 's3://{}' WITH CSV HEADER DELIMITER AS ',' iam-role '{}'"
 
         try:
             cur.execSQL(SQL_STATEMENT.format(table_name, data_path, self.iam_role))

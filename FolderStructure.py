@@ -11,3 +11,6 @@ class FolderStructure:
 
     def read_yaml(self, file_stream):
         pass
+
+    def get_inbound(self, regex):
+        pass

@@ -1,0 +1,45 @@
+environment: aws
+execution_environment:
+    aws:
+        region: 'eu-west-3'
+        data_directory_path:
+            data:
+                bucket: ggriponstagebucket
+            config:
+                bucket: postgretaxiconfig
+                directories:
+                    config: config
+                    sql_scripts: sql_scripts
+                    flows: flows
+                files:
+                    logger_config_path: logger_config.yaml
+                    flows_path: flows.yaml
+        db_info:
+            engine: Redshift
+            server: taxicluster.c4rsoozk2tez.eu-west-3.redshift.amazonaws.com
+            name: yellowtaxitrips
+            port: 5439
+            table_name: staging_area.raw{rv_object}file_{ext}
+            secret_name: redshiftqueryeditor-ggripon-taxitrip_cluster_secret
+
+
+    local:
+        data_directory_path:
+            data:
+                base_path: data
+                directories:
+                    - inbound
+                    - work
+                    - error
+                    - done
+            config:
+                sql_scripts: sql_scripts
+                logger_config_path: config/logger_config.yaml
+                flows_path: config/flows.yaml
+        db_info:
+            engine: PostgreDBServer
+            server: localhost
+            name: YellowTaxiTrips
+            port: 5432
+            table_name: staging_area.raw{rv_object}file_{ext}
+

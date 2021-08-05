@@ -1,4 +1,8 @@
-import logging, pathlib, urllib
+#!/usr/bin/python
+#-*- coding: utf-8 -*-
+
+import logging
+import pathlib
 from FolderStructureAWS import FolderStructureAWS
 from FolderStructure import FolderStructure
 from FolderStructureLocal import FolderStructureLocal
