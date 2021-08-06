@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS staging_area.rawpaymenttypesfile_csv (
 	paymenttype_name varchar NULL
 );
 
-CREATE TABLE IF NOT EXISTS staging_area.rawtimedim (
+CREATE TABLE IF NOT EXISTS staging_area.rawtimedimfile_csv (
 	timeid varchar NULL,
 	"hour" varchar NULL,
 	"day" varchar NULL,

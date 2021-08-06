@@ -1,7 +1,6 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 
-from os import path
 from DBServer import DBServer
 import sys
 import psycopg2
@@ -47,7 +46,7 @@ class PostgreDBServer(DBServer):
 
     #Execute an SQL query on the server instance.
     @logging_decorator
-    def execSQL(self, query) -> None:
+    def execSQL(self, query:str) -> None:
         try:
             with self.conn.cursor() as cur:
                 cur.execute(query)
@@ -97,7 +96,7 @@ class PostgreDBServer(DBServer):
 
     #Bulk insert csv file at data_path into db_server instance in table_name
     @logging_decorator
-    def copy_from(self, table_name, data_path) -> None:
+    def copy_from(self, table_name:str, data_path:str) -> None:
 
         cur = self.conn.cursor()
         options = {

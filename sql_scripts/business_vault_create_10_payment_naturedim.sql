@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS business_vault.payment_naturedim(
 	payment_natureid SMALLINT PRIMARY KEY,
-	payment_nature_name VARCHAR)
+	payment_nature_name CHAR(150))
 DISTSTYLE AUTO
-DISTKEY (payment_natureid)
-SORTKEY(payment_natureid)
-;
+DISTKEY(payment_natureid)
+SORTKEY(payment_natureid);
 
 INSERT INTO business_vault.payment_naturedim(payment_natureid, payment_nature_name)
 VALUES

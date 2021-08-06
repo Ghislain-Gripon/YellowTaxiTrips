@@ -25,6 +25,10 @@ flows:
     type: file_to_rv
     rv_object: zones # f"raw{dv_object}file"
     file_regex: "^zones_(?P<origin>.+?)_(?P<date>.+?)_.+?[.](?P<ext>.+?)$"
+  - name: timedim_to_rv
+    type: file_to_rv
+    rv_object: timedim # f"raw{dv_object}file"
+    file_regex: "^timedim_(?P<origin>.+?)_(?P<date>.+?)_.+?[.](?P<ext>.+?)$"
   - name: sa_to_rv
     type: inner_database_flux
     hashfunc: sha256
@@ -48,8 +52,6 @@ flows:
       - raw_vault_load_16_linktrips.sql
   - name: rv_to_bv
     type: inner_database_flux
-    time_start: '2018-01-01'
-    time_end: '2019-01-01'
     bv_drop_trigger: 0
     sql: 
       - business_vault_create_1_schema_structure.sql
@@ -71,6 +73,7 @@ flows:
       - business_vault_load_6_ratecodedim.sql
       - business_vault_load_7_vendordim.sql
       - business_vault_load_8_payment_typedim.sql
+      - business_vault_load_9_timedim.sql
   - name: bv_to_infomart
     type: inner_database_flux
     sql: 

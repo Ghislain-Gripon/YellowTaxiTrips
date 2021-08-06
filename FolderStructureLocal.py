@@ -5,7 +5,6 @@ import logging
 import logging.config
 import yaml
 import re
-from sys import path
 from Decorator import logging_decorator
 
 #class description here
@@ -19,25 +18,29 @@ from Decorator import logging_decorator
 class FolderStructureLocal:
 
     @logging_decorator
-    def __init__(self, environment:str, **kwargs):
+    def __init__(self, **kwargs):
         self.root_path:pathlib.Path = kwargs.get('root_path')
         if self.root_path is None:
             self.root_path:pathlib.Path = pathlib.Path.cwd()
         self.config_file_path:str = kwargs['config_file_path']
         self.file_directories = {}
-        self.config = self.load(self.get_file(self.config_file_path))['execution_environment'][environment]
-        self.flows = None
+        self.config:dict = self.load(self.config_file_path)['execution_environment']['local']
+        self.flows:dict = None
         
         if(self.config is None):
             logging.error("Configuration dictonnary is null, check file location at {}".format(self.config_file_path))
             raise ValueError("Configuration dictonnary is null on {} instance.".format(self))
-        with open(self.config["logger_config_path"]) as f:
-            logging.config.dictConfig(yaml.load(f, Loader=yaml.SafeLoader))
+            
+        logging.config.dictConfig(self.load(self.config["logger_config_path"]))
+
         logging.info("Loaded logger yaml configuration at {}".format(self.config["logger_config_path"]))
-        self.flows = self.load(self.get_file(self.config["flows_path"]))
+
+        self.flows:dict = self.load(self.config["flows_path"])
+
         if(self.flows is None):
             logging.error("Flows dictonnary is null, check file location at {}".format(self.config["flows_path"]))
             raise ValueError("Flows dictonnary is null on {} instance.".format(self))
+            
         for directory in self.config["data_directory_path"]["directories"]:
             file_directory:pathlib.Path = self.root_path / pathlib.Path(self.config["data_directory_path"]["base_path"]) / directory
             pathlib.Path(file_directory).mkdir(parents=True, exist_ok=True)
@@ -85,68 +88,60 @@ class FolderStructureLocal:
 
     #Main function of the class, enacts all its duties of class instancing and call making.
     @logging_decorator
-    def load(self, file_path):
-        file_exists:bool = self._check_for_file(file_path)
-        if(not file_exists):
+    def load(self, file_path:str):
+        _file = None
+        path:pathlib.Path = pathlib.Path(self.root_path) / file_path
+        if self.check_for_file(path):    
+            _file = open(path, 'r')
+        else:
             logging.warning("No file located at {}".format(file_path))
-            raise FileNotFoundError("{} does not exist.".format(file_path))
+            raise FileNotFoundError("There is not file at {}".format(path))
 
         if pathlib.Path(file_path).suffix == '.yaml':
-            return self.read_yaml(file_path)
+            return self.read_yaml(_file)
         else:
-            return self._get_file(file_path)
+            return _file.read()
         
 
     #read the config from disk in local directory specified in class attribute file_path
     @logging_decorator
-    def read_yaml(self, file_path) -> dict:
+    def read_yaml(self, file_stream) -> dict:
         """
-        
+        Safe loads a yaml dictionary from an open file stream.
         """
 
-        file_exists:bool = self._check_for_file(file_path)
-
-        if(not file_exists):
-            logging.warning("No file located at {}".format(file_path))
-            raise FileNotFoundError("{} does not exist.".format(file_path))
-        logging.info("Reading {}, forwarding python yaml dict.".format(file_path))
-        _file = None
+        _file:dict = None
 
         try:
-            with open(file_path) as yaml_file:
-                _file = yaml.load(yaml_file, Loader=yaml.SafeLoader)
+            _file:dict = yaml.load(file_stream, Loader=yaml.SafeLoader)
             logging.info("YAML configuration file successfully read.")
+            
         #catch a yaml related error to inform user of problem with config file
         except FileNotFoundError:
-            logging.error("YAML file at {} couldn't be decoded.".format(file_path))
-            _file = None
+            logging.error("YAML file at {} couldn't be decoded.".format(file_stream))
+            raise FileNotFoundError("YAML file at {} couldn't be decoded.".format(file_stream))
+            
         except PermissionError:
-            logging.exception("Can not access {}, permission denied.".format(file_path))
+            logging.exception("Can not access {}, permission denied.".format(file_stream))
+            raise PermissionError("Can not access {}, permission denied.".format(file_stream))
+
         except:
             logging.error("File reading error.")
-            _file = None
+            raise "File reading error."
 
+        file_stream.close()
         return _file
 
     @logging_decorator
     def get_config(self, ) -> dict:
+        """
+        Returns the configuration dictionary.
+        """
         return self.config
 
     @logging_decorator
     def get_flows(self, ) -> dict:
+        """
+        Returns the flows dictionary.
+        """
         return self.flows
-
-    @logging_decorator
-    def _get_file(self, file_name):
-        """
-        Returns the file at file_name from the root_path, by default the current working directory.
-        """
-        _file = None
-        path:pathlib.Path = pathlib.Path(self.root_path) / file_name
-        if self.check_for_file(path):
-            with open(path, 'r') as f:
-                _file = f.read()
-        else:
-            raise FileNotFoundError("There is not file at {}".format(path))
-
-        return _file

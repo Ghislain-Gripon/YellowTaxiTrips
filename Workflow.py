@@ -10,7 +10,6 @@ from DBServer import DBServer
 from FolderStructureAWS import FolderStructureAWS
 from FolderStructure import FolderStructure
 from FolderStructureLocal import FolderStructureLocal
-from getpass import getpass
 
 #class description here
 #Workflow handles the flow execution according to the flow yaml file
@@ -52,60 +51,61 @@ class Workflow:
 
                     file_list = self.FileHandler.get_Inbound_List(flow["file_regex"])
 
-                    file_new_path = ""
-                    try:
-                        match = re.search(flow["file_regex"], file.name)
-                    except AttributeError:
-                        logging.error("Incorrect format for the filename: {}".format(file))
-                    
-                    try:
-                        file_new_path = self.FileHandler.Move_To_Directory(self.bucket, 'work', self.key)                 
+                    for file in file_list:
+                        file_new_path = ""
                         try:
-                            self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
-                                
-                        except DBServerError.DataError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            re.search(flow["file_regex"], file.name)
+                        except AttributeError:
+                            logging.error("Incorrect format for the filename: {}".format(file))
+                        
+                        try:
+                            file_new_path = self.FileHandler.Move_To_Directory(self.bucket, 'work', self.key)                 
+                            try:
+                                self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
+                                    
+                            except DBServerError.DataError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.DatabaseError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.DatabaseError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.OperationalError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.OperationalError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.ProgrammingError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.ProgrammingError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.InternalError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.InternalError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.IntegrityError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.IntegrityError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
 
-                        except DBServerError.DBError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)  
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                            except DBServerError.DBError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)  
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+
+                            except Exception as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)
+                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+
+                            else:
+                                self.FileHandler.Move_To_Directory(self.bucket, 'done', file_new_path)
+    
+                        except FileNotFoundError as err:
+                            logging.error("Error type : " + type(err).__name__, err.args)
+                            
+                        except PermissionError as err:
+                            logging.error("Error type : " + type(err).__name__, err.args)
 
                         except Exception as err:
                             logging.error("Error type : " + type(err).__name__, err.args)
-                            self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
-
-                        else:
-                            self.FileHandler.Move_To_Directory(self.bucket, 'done', file_new_path)
-    
-                    except FileNotFoundError as err:
-                        logging.error("Error type : " + type(err).__name__, err.args)
-                        
-                    except PermissionError as err:
-                        logging.error("Error type : " + type(err).__name__, err.args)
-
-                    except Exception as err:
-                        logging.error("Error type : " + type(err).__name__, err.args)
 
             elif flow_type == "inner_database_flux":
                 
@@ -169,22 +169,26 @@ class Workflow:
 
     @logging_decorator
     def get_connection(self, ) -> DBServer:
-        """test
-        test
         """
-        db_server = None
-        secret = self.get_secret()
+        retrieve the database class instance object
+        """
                 
         try:
-            db_server = PostgreDBServer(secret)
+            return {
+                'PostgreDBServer': PostgreDBServer(self.config),
+                'RedshiftDBServer': RedshiftDBServer(self.config)
+            }[self.config['db_info']['engine']]
+
         except DBServerError.OperationalError as err:
             logging.error("Error type : " + type(err).__name__, err.args)  
             raise DBServerError.OperationalError("Could not establish connection, {}".format(err.args))
+
+        except ValueError as err:
+            logging.error("Wrong value for database enine type from config.")
+            raise ValueError("Wrong value for database enine type from config.")
             
         except Exception as err:
             logging.error("Connection error on {} with {} error.".format(self, err))
-            print('Wrong username and password combination.')
-
-        return db_server
+            raise Exception('Wrong username and password combination.')  
 
     

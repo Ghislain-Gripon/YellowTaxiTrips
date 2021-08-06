@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS business_vault.timedim(
-	timeid IDENTITY(0,1) PRIMARY KEY,
+	timeid INT PRIMARY KEY,
 	"hour" SMALLINT,
 	"day" SMALLINT,
 	timestring TIMESTAMP)
