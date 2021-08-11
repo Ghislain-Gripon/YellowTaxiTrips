@@ -31,9 +31,13 @@ execution_environment:
                     - error
                     - done
             config:
-                sql_scripts: sql_scripts
-                logger_config_path: config/logger_config.yaml
-                flows_path: config/flows.yaml
+                directories:
+                    config: config
+                    sql_scripts: sql_scripts
+                    flows: config
+                files:
+                    logger_config_path: logger_config.yaml
+                    flows_path: flows.yaml
         db_info:
             engine: PostgreDBServer
             server: localhost

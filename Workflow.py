@@ -112,11 +112,9 @@ class Workflow:
                 sql_script_path = ""
                 for sql_script in flow["sql"]:
                     try:
-                        sql_bucket = self.config['data_directory_path']['config']['bucket']
-                        sql_folder = self.config['data_directory_path']['config']['directories']['sql_scripts']
 
-                        sql_script_file = self.FileHandler.get_file(sql_bucket, '{}/{}'.format(sql_folder, sql_script))
-                        sql_script_path = '{}/{}/{}'.format(sql_bucket, sql_folder, sql_script)
+                        sql_script_file = self.FileHandler.load('{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script))
+                        sql_script_path = '{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script)
                         
                         self.db_server.execSQL(sql_script_file.format_map(flow))
                         logging.info("Run {} script on database.".format(sql_script_path))

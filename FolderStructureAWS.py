@@ -25,9 +25,9 @@ class FolderStructureAWS(FolderStructure):
 
         self.bucket:str = kwargs['event']['Records'][0]['s3']['bucket']['name']
         self.key:str = urllib.parse.unquote(kwargs['event']['Records'][0]['s3']['object']['key'])
-        self.flows = None
-        self.config = None
         self.config:dict = self.load('{}/{}'.format(kwargs['config_bucket'], kwargs['config_file_path']))['execution_environment']['aws']
+        self.sql_scripts_path:str = '{}/{}'.format(self.config['data_directory_path']['config']['bucket'], 
+            self.config['data_directory_path']['config']['directories']['sql_scripts'])
         
         if(self.config is None):
             logging.error("Configuration dictonnary is null, check file location at {}".format(kwargs['config_file_path']))
@@ -60,7 +60,7 @@ class FolderStructureAWS(FolderStructure):
         try:
             file_path:str = urllib.parse.unquote(file_path)
             raw_key:str = pathlib.Path(file_path).name    
-            s3 = boto3.client(service_name='s3',region_name= self.config['region'])
+            s3 = boto3.client(service_name='s3', region_name= self.config['region'])
 
             s3.copy_object(
                 Bucket= self.bucket,

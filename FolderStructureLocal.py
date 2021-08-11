@@ -22,27 +22,31 @@ class FolderStructureLocal:
         self.root_path:pathlib.Path = kwargs.get('root_path')
         if self.root_path is None:
             self.root_path:pathlib.Path = pathlib.Path.cwd()
-        self.config_file_path:str = kwargs['config_file_path']
+        self.config_file_path:str = kwargs.get('config_file_path')
+        if self.rooconfig_file_patht_path is None:
+            self.config_file_path:pathlib.Path = pathlib.Path('config/config.yaml')
         self.file_directories = {}
         self.config:dict = self.load(self.config_file_path)['execution_environment']['local']
-        self.flows:dict = None
+        self.sql_scripts_path:str = '{}'.format(self.config['data_directory_path']['config']['directories']['sql_scripts'])
         
         if(self.config is None):
             logging.error("Configuration dictonnary is null, check file location at {}".format(self.config_file_path))
             raise ValueError("Configuration dictonnary is null on {} instance.".format(self))
             
-        logging.config.dictConfig(self.load(self.config["logger_config_path"]))
+        logging.config.dictConfig(self.load('{}/{}'.format(self.config['data_directory_path']['config']['directories']['config'], 
+            self.config['data_directory_path']['config']['files']['logger_config_path'])))
 
         logging.info("Loaded logger yaml configuration at {}".format(self.config["logger_config_path"]))
 
-        self.flows:dict = self.load(self.config["flows_path"])
+        self.flows:dict = self.load('{}/{}'.format(self.config['data_directory_path']['config']['directories']['flows'], 
+            self.config['data_directory_path']['config']['files']['flows_path']))
 
         if(self.flows is None):
-            logging.error("Flows dictonnary is null, check file location at {}".format(self.config["flows_path"]))
-            raise ValueError("Flows dictonnary is null on {} instance.".format(self))
+            logging.error("Flows dictonnary is null, check file location")
+            raise ValueError("Flows dictonnary is null.")
             
-        for directory in self.config["data_directory_path"]["directories"]:
-            file_directory:pathlib.Path = self.root_path / pathlib.Path(self.config["data_directory_path"]["base_path"]) / directory
+        for directory in self.config["data_directory_path"]['data']["directories"]:
+            file_directory:pathlib.Path = self.root_path / pathlib.Path(self.config["data_directory_path"]['data']["base_path"]) / directory
             pathlib.Path(file_directory).mkdir(parents=True, exist_ok=True)
             self.file_directories[directory] = file_directory
             logging.debug("File directory {} loaded.".format(file_directory))
