@@ -5,5 +5,3 @@ IF (SELECT count(*) FROM raw_vault.sattrips_csv st WHERE st.loadenddate > CAST('
 END IF;
 
 CREATE SCHEMA IF NOT EXISTS business_vault;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-

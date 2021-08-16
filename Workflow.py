@@ -53,59 +53,57 @@ class Workflow:
 
                     for file in file_list:
                         file_new_path = ""
-                        try:
-                            re.search(flow["file_regex"], file.name)
-                        except AttributeError:
-                            logging.error("Incorrect format for the filename: {}".format(file))
+                        if re.search(flow["file_regex"], file.name):
                         
-                        try:
-                            file_new_path = self.FileHandler.Move_To_Directory(self.bucket, 'work', self.key)                 
                             try:
-                                self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
-                                    
-                            except DBServerError.DataError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                file_new_path = self.FileHandler.Move_To_Directory(file, 'work')                 
+                                try:
+                                    self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
+                                        
+                                except DBServerError.DataError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.DatabaseError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.DatabaseError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.OperationalError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.OperationalError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.ProgrammingError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.ProgrammingError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.InternalError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.InternalError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.IntegrityError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.IntegrityError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
 
-                            except DBServerError.DBError as err:
-                                logging.error("Error type : " + type(err).__name__, err.args)  
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
+                                except DBServerError.DBError as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)  
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
+
+                                except Exception as err:
+                                    logging.error("Error type : " + type(err).__name__, err.args)
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'error')
+
+                                else:
+                                    logging.info("Copy of {} completed.".format(file_new_path))
+                                    self.FileHandler.Move_To_Directory(file_new_path, 'done')
+        
+                            except FileNotFoundError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)
+                                
+                            except PermissionError as err:
+                                logging.error("Error type : " + type(err).__name__, err.args)
 
                             except Exception as err:
                                 logging.error("Error type : " + type(err).__name__, err.args)
-                                self.FileHandler.Move_To_Directory(self.bucket, 'error', file_new_path)
-
-                            else:
-                                self.FileHandler.Move_To_Directory(self.bucket, 'done', file_new_path)
-    
-                        except FileNotFoundError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)
-                            
-                        except PermissionError as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)
-
-                        except Exception as err:
-                            logging.error("Error type : " + type(err).__name__, err.args)
 
             elif flow_type == "inner_database_flux":
                 
@@ -113,8 +111,8 @@ class Workflow:
                 for sql_script in flow["sql"]:
                     try:
 
-                        sql_script_file = self.FileHandler.load('{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script))
                         sql_script_path = '{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script)
+                        sql_script_file = self.FileHandler.load(sql_script_path)
                         
                         self.db_server.execSQL(sql_script_file.format_map(flow))
                         logging.info("Run {} script on database.".format(sql_script_path))
