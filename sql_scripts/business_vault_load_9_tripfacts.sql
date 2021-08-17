@@ -11,10 +11,9 @@ INSERT INTO business_vault.tripfacts(
 	passengercount,
 	total_amount,
 	tip_amount,
-	trip_distance,
-	trip_time)
+	trip_distance)
 		
-SELECT 
+SELECT DISTINCT
 	st.triphashkey,
 	putime.timeid, 
 	dotime.timeid, 
@@ -27,8 +26,7 @@ SELECT
 	st.passenger_count,
 	st.total_amount, 
 	st.tip_amount,
-	st.trip_distance,
-	CAST(st.tpep_dropoff_datetime - st.tpep_pickup_datetime AS TEXT)
+	st.trip_distance
 		
 FROM raw_vault.sattrips_csv st 
 			JOIN business_vault.timedim putime ON 

@@ -3,9 +3,11 @@ INSERT INTO business_vault.timedim(
 	"hour",
 	"day",
 	timestring)
-SELECT DISTINCT 
+
+SELECT 
 	timeid,
     "hour",
     "day",
     timestring
+
 FROM raw_vault.timedim;

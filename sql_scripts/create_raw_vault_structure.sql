@@ -3,19 +3,19 @@ CREATE TABLE IF NOT EXISTS raw_vault.hubpaymenttypes (
 	paymenttypehashkey CHAR(64) NOT NULL PRIMARY KEY,
 	paymenttypename varchar,
 	loaddate timestamp,
-	recordsource varchar
+	recordsource varchar)
 	DISTSTYLE AUTO
 	DISTKEY(paymenttypehashkey)
-	SORTKEY(paymenttypehashkey));
+	SORTKEY(paymenttypehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.hubratecodeids (
 	ratecodenamehashkey CHAR(64) NOT NULL PRIMARY KEY,
 	ratecodename varchar,
 	loaddate timestamp,
-	recordsource varchar
+	recordsource varchar)
 	DISTSTYLE AUTO
 	DISTKEY(ratecodenamehashkey)
-	SORTKEY(ratecodenamehashkey));
+	SORTKEY(ratecodenamehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.hubtrips (
 	triphashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -26,19 +26,19 @@ CREATE TABLE IF NOT EXISTS raw_vault.hubtrips (
 	puzoneid int4,
 	dozoneid int4,
 	vendorid int4,
-	is_payment int4
+	is_payment int4)
 	DISTSTYLE AUTO
 	DISTKEY(triphashkey)
-	SORTKEY(triphashkey));
+	SORTKEY(triphashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.hubvendors (
 	vendorhashkey CHAR(64) NOT NULL PRIMARY KEY,
 	vendorname varchar NOT NULL,
 	loaddate timestamp NOT NULL,
-	recordsource varchar NOT NULL
+	recordsource varchar NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(vendorhashkey)
-	SORTKEY(vendorhashkey));
+	SORTKEY(vendorhashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.hubzones (
 	zonenamehashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -46,10 +46,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.hubzones (
 	loaddate timestamp NOT NULL,
 	recordsource varchar NOT NULL,
 	borough varchar NOT NULL,
-	service_zone varchar NOT NULL
+	service_zone varchar NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(zonenamehashkey)
-	SORTKEY(zonenamehashkey));
+	SORTKEY(zonenamehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.satpaymenttypes_csv (
 	paymenttypehashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -57,10 +57,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.satpaymenttypes_csv (
 	paymenttypename varchar NOT NULL,
 	loaddate timestamp NOT NULL,
 	loadenddate timestamp NOT NULL,
-	recordsource varchar NOT NULL
+	recordsource varchar NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(paymenttypehashkey)
-	SORTKEY(paymenttypehashkey));
+	SORTKEY(paymenttypehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.satratecodeids_csv (
 	ratecodenamehashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -68,10 +68,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.satratecodeids_csv (
 	ratecodename varchar NOT NULL,
 	loaddate timestamp NOT NULL,
 	loadenddate timestamp NOT NULL,
-	recordsource varchar NOT NULL
+	recordsource varchar NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(ratecodenamehashkey)
-	SORTKEY(ratecodenamehashkey));
+	SORTKEY(ratecodenamehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.sattrips_csv (
 	triphashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -95,10 +95,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.sattrips_csv (
 	tpep_dropoff_datetime timestamp NULL,
 	puzoneid int4 NOT NULL,
 	dozoneid int4 NOT NULL,
-	is_payment int4 NOT NULL
+	is_payment int4 NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(triphashkey)
-	SORTKEY(triphashkey));
+	SORTKEY(triphashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.satvendors_csv (
 	vendorhashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -106,10 +106,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.satvendors_csv (
 	vendorname varchar NOT NULL,
 	loaddate timestamp NOT NULL,
 	recordsource varchar NOT NULL,
-	loadenddate timestamp NOT NULL
+	loadenddate timestamp NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(vendorhashkey)
-	SORTKEY(vendorhashkey));
+	SORTKEY(vendorhashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.satzones_csv (
 	zonenamehashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -119,10 +119,10 @@ CREATE TABLE IF NOT EXISTS raw_vault.satzones_csv (
 	loaddate timestamp NOT NULL,
 	loadenddate timestamp NOT NULL,
 	recordsource varchar NOT NULL,
-	zoneid int4 NOT NULL
+	zoneid int4 NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(zonenamehashkey)
-	SORTKEY(zonenamehashkey));
+	SORTKEY(zonenamehashkey);
 
 CREATE TABLE IF NOT EXISTS raw_vault.linktrips(
 	linktriphashkey CHAR(64) NOT NULL PRIMARY KEY,
@@ -133,7 +133,16 @@ CREATE TABLE IF NOT EXISTS raw_vault.linktrips(
 	ratecodenamehashkey CHAR(64) NOT NULL,
 	paymenttypehashkey CHAR(64) NOT NULL,
 	loaddate timestamp NOT NULL,
-	recordsource varchar NOT NULL
+	recordsource varchar NOT NULL)
 	DISTSTYLE AUTO
 	DISTKEY(triphashkey)
-	SORTKEY(triphashkey));
+	SORTKEY(triphashkey);
+
+CREATE TABLE IF NOT EXISTS raw_vault.timedim(
+	timeid INT PRIMARY KEY,
+	"hour" SMALLINT,
+	"day" SMALLINT,
+	timestring TIMESTAMP)
+	DISTSTYLE AUTO
+	DISTKEY(timeid)
+	SORTKEY(timeid);

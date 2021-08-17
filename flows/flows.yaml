@@ -31,8 +31,7 @@ flows:
     file_regex: "^timedim_(?P<origin>.+?)_(?P<date>.+?)_.+?[.](?P<ext>.+?)$"
   - name: sa_to_rv
     type: inner_database_flux
-    hashfunc: sha256
-    origin: csv
+    hash_size: 256 #size of the sha2 hash in bytes
     sql:
       - raw_vault_load_1_hubtrips.sql
       - raw_vault_load_2_sattrips.sql
@@ -50,11 +49,11 @@ flows:
       - raw_vault_load_14_satvendors.sql
       - raw_vault_load_15_update_satvendors.sql
       - raw_vault_load_16_linktrips.sql
+      - raw_vault_load_17_timedim.sql
   - name: rv_to_bv
     type: inner_database_flux
-    bv_drop_trigger: 0
     sql: 
-      - business_vault_create_1_schema_structure.sql
+      - business_vault_create_1_schema_structure_with_drop.sql
       - business_vault_create_2_timedim.sql
       - business_vault_create_3_vendordim.sql
       - business_vault_create_4_payment_typedim.sql
@@ -73,7 +72,8 @@ flows:
       - business_vault_load_6_ratecodedim.sql
       - business_vault_load_7_vendordim.sql
       - business_vault_load_8_payment_typedim.sql
-      - business_vault_load_9_timedim.sql
+      - business_vault_load_9_tripfacts.sql
+      - business_vault_load_10_payment_naturedim.sql
   - name: bv_to_infomart
     type: inner_database_flux
     sql: 

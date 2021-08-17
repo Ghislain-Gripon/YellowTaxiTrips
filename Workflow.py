@@ -39,26 +39,25 @@ class Workflow:
         now = self.db_server.get_now()
         
         logging.info("Iterating over flows.")
-        for flow in self.flows["flows"]:
-            logging.info("Running {} flow.".format(flow["name"]))
+        for flow in self.flows.get("flows"):
+            logging.info("Running {} flow.".format(flow.get("name")))
 
-            file = '{}/{}'.format(self.bucket, self.key)
-            flow_type = flow["type"]
             flow['now'] = now
-            logging.debug("Flow of type : {}".format(flow_type))
+            flow['origin'] = self.config.get("data_origin")
+            logging.debug("Flow of type : {}".format(flow.get('type')))
 
-            if flow_type == "file_to_rv":
+            if flow.get('type') == "file_to_rv":
 
-                    file_list = self.FileHandler.get_Inbound_List(flow["file_regex"])
+                    file_list = self.FileHandler.get_Inbound_List(flow.get("file_regex"))
 
                     for file in file_list:
                         file_new_path = ""
-                        if re.search(flow["file_regex"], file.name):
+                        if re.search(flow.get("file_regex"), file.name):
                         
                             try:
                                 file_new_path = self.FileHandler.Move_To_Directory(file, 'work')                 
                                 try:
-                                    self.db_server.copy_from(self.config["db_info"]["table_name"].format_map(flow), file_new_path)
+                                    self.db_server.copy_from(self.config.get("db_info").get("table_name").format_map(flow), file_new_path)
                                         
                                 except DBServerError.DataError as err:
                                     logging.error("Error type : " + type(err).__name__, err.args)  
@@ -105,10 +104,10 @@ class Workflow:
                             except Exception as err:
                                 logging.error("Error type : " + type(err).__name__, err.args)
 
-            elif flow_type == "inner_database_flux":
+            elif flow.get('type') == "inner_database_flux":
                 
                 sql_script_path = ""
-                for sql_script in flow["sql"]:
+                for sql_script in flow.get("sql"):
                     try:
 
                         sql_script_path = '{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script)
@@ -159,7 +158,7 @@ class Workflow:
 
             else:
                 logging.warning("Flow type is not recognized.")
-                raise TypeError("Unrecognized flow type. {} is not known.".format(flow_type))
+                raise TypeError("Unrecognized flow type. {} is not known.".format(flow.get('type')))
 
         self.db_server.closeConn()
 

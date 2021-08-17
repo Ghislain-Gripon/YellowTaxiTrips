@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS business_vault.tripfacts(
 	tip_amount DOUBLE PRECISION,
 	trip_distance DOUBLE PRECISION,
 	is_payment INTEGER REFERENCES business_vault.payment_naturedim (payment_natureid),
-	trip_time TEXT,
 	PRIMARY KEY (
 		triphashkey,
 		pickuptimeid, 

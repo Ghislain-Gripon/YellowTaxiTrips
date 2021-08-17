@@ -1,6 +1,9 @@
+#data_origin -> origin of the records, to be changed according to system of origin
+
 execution_environment:
     aws:
         region: 'eu-west-3'
+        data_origin: 'csv'
         data_directory_path:
             data:
                 bucket: ggriponstagebucket
@@ -22,6 +25,7 @@ execution_environment:
 
 
     local:
+        data_origin: 'csv'
         data_directory_path:
             data:
                 base_path: data
