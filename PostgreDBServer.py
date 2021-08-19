@@ -100,8 +100,8 @@ class PostgreDBServer(DBServer):
 
         cur = self.conn.cursor()
         options = {
-            "txt": "TEXT DELIMITER '|'",
-            "csv": "CSV HEADER DELIMITER ','"
+            ".txt": "TEXT DELIMITER '|'",
+            ".csv": "CSV HEADER DELIMITER ','"
         }
         SQL_STATEMENT = "COPY {} FROM STDIN WITH {}"
 
