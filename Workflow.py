@@ -54,8 +54,9 @@ class Workflow:
 
                     for file in file_list:
                         file_new_path = ""
-                        if re.search(flow.get("file_regex"), file.name):
-                        
+                        match = re.search(flow.get("file_regex"), file.name)
+                        if match:
+                            flow['ext'] = match.group('ext')
                             try:
                                 file_new_path = self.FileHandler.Move_To_Directory(file, 'work')                 
                                 try:
