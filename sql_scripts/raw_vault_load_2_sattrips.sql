@@ -24,13 +24,13 @@ INSERT INTO raw_vault.sattrips_csv (
 
 SELECT DISTINCT
 	CAST(
-		SHA2(CONCAT(CAST(TO_TIMESTAMP(TRIM(BOTH FROM LOWER(rtf.tpep_pickup_datetime)), 'MM/DD/YYYY HH:MI:SS AM') AS VARCHAR),
+		{hash_func}(CONCAT(CAST(TO_TIMESTAMP(TRIM(BOTH FROM LOWER(rtf.tpep_pickup_datetime)), 'MM/DD/YYYY HH:MI:SS AM') AS VARCHAR),
 				CAST(TO_TIMESTAMP(TRIM(BOTH FROM LOWER(rtf.tpep_dropoff_datetime)), 'MM/DD/YYYY HH:MI:SS AM') AS VARCHAR), 
 				TRIM(BOTH FROM LOWER(rtf.puzoneid)), TRIM(BOTH FROM LOWER(rtf.dozoneid)),
 				TRIM(BOTH FROM LOWER(rtf.vendorid)), 
 				CAST(CASE WHEN CAST(TRIM(BOTH FROM LOWER(rtf.total_amount)) AS DOUBLE PRECISION) >= 0 THEN 1 
 				ELSE 0 END AS VARCHAR)),
-		{hash_size}) 
+		{hash_param}) 
 	AS CHAR(64)) AS triphashkey,
 	CAST('{now}' AS TIMESTAMP), 
 	TRIM(BOTH FROM LOWER('{origin}')),
@@ -64,11 +64,11 @@ WHERE
 	rtf.dozoneid IS NOT NULL AND 
 	rtf.vendorid IS NOT NULL AND 
 	rtf.total_amount IS NOT NULL AND 
-	NOT EXISTS (SELECT * FROM raw_vault.sattrips_csv r WHERE r.triphashkey = CAST(SHA2(CONCAT(
+	NOT EXISTS (SELECT * FROM raw_vault.sattrips_csv r WHERE r.triphashkey = CAST({hash_func}(CONCAT(
 		CAST(TO_TIMESTAMP(TRIM(BOTH FROM LOWER(rtf.tpep_pickup_datetime)), 'MM/DD/YYYY HH:MI:SS AM') AS VARCHAR),
 		CAST(TO_TIMESTAMP(TRIM(BOTH FROM LOWER(rtf.tpep_dropoff_datetime)), 'MM/DD/YYYY HH:MI:SS AM') AS VARCHAR), 
 		TRIM(BOTH FROM rtf.puzoneid), TRIM(BOTH FROM rtf.dozoneid),
 		TRIM(BOTH FROM rtf.vendorid), 
-		CASE WHEN CAST(rtf.total_amount AS DOUBLE PRECISION) >= 0 THEN '1' ELSE '0' END), {hash_size}) AS CHAR(64))
+		CASE WHEN CAST(rtf.total_amount AS DOUBLE PRECISION) >= 0 THEN '1' ELSE '0' END), {hash_param}) AS CHAR(64))
 		AND r.loaddate = CAST('{now}' AS TIMESTAMP));
 

@@ -7,7 +7,7 @@ INSERT INTO raw_vault.satratecodeids_csv(
 	recordsource)
 	
 SELECT DISTINCT
-	CAST(SHA2(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_size}) AS CHAR(64)) AS ratecodenamehashkey,
+	CAST({hash_func}(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_param}) AS CHAR(64)) AS ratecodenamehashkey,
 	CAST(rrcf.ratecodeid AS INTEGER),
 	TRIM(BOTH FROM LOWER(rrcf.ratecodename)),
 	CAST('{now}' AS TIMESTAMP),
@@ -22,6 +22,6 @@ WHERE
 	NOT EXISTS (SELECT * 
 					FROM raw_vault.satratecodeids_csv src 
 					WHERE 
-						src.ratecodenamehashkey = CAST(SHA2(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_size})
+						src.ratecodenamehashkey = CAST({hash_func}(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_param})
 						AS CHAR(64))
 						AND src.loaddate = CAST('{now}' AS TIMESTAMP));

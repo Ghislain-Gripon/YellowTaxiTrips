@@ -22,6 +22,9 @@ execution_environment:
             port: 5439
             table_name: staging_area.raw{rv_object}file_{ext}
             secret_name: redshiftqueryeditor-ggripon-taxitrip_cluster_secret
+            hash:
+                func: SHA2
+                param: 256
 
 
     local:
@@ -48,4 +51,7 @@ execution_environment:
             name: YellowTaxiTrips
             port: 5432
             table_name: staging_area.raw{rv_object}file_{ext}
+            hash:
+                func: DIGEST
+                param: "'sha256'"
 

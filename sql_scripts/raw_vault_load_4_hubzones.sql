@@ -8,8 +8,8 @@ INSERT INTO raw_vault.hubzones (
 	)
 
 SELECT DISTINCT
-	CAST(DIGEST(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), TRIM(BOTH FROM LOWER(rtf.borough)), 
-		TRIM(BOTH FROM LOWER(rtf.service_zone))),'{hashfunc}') 
+	CAST({hash_func}(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), TRIM(BOTH FROM LOWER(rtf.borough)), 
+		TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_param}) 
 		AS CHAR(64)) AS zonenamehashkey, 
 	TRIM(BOTH FROM TRIM(both '"' FROM LOWER(rtf."zone"))) AS "zone",
 	TRIM(BOTH FROM TRIM(both '"' FROM LOWER(rtf.borough))) AS borough,
@@ -23,5 +23,5 @@ WHERE
 	rtf."zone" IS NOT NULL AND
 	rtf.borough IS NOT NULL AND
 	rtf.service_zone IS NOT NULL AND
-	NOT EXISTS (SELECT * FROM raw_vault.hubzones h WHERE h.zonenamehashkey = CAST(SHA2(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")),
-		TRIM(BOTH FROM LOWER(rtf.borough)), TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_size}) AS CHAR(64)));
+	NOT EXISTS (SELECT * FROM raw_vault.hubzones h WHERE h.zonenamehashkey = CAST({hash_func}(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")),
+		TRIM(BOTH FROM LOWER(rtf.borough)), TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_param}) AS CHAR(64)));

@@ -9,8 +9,8 @@ INSERT INTO raw_vault.satzones_csv(
 	zoneid)
 	
 SELECT DISTINCT
-	CAST(SHA2(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), TRIM(BOTH FROM LOWER(rtf.borough)), 
-		TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_size}) as CHAR(64)) AS zonenamehashkey, 
+	CAST({hash_func}(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), TRIM(BOTH FROM LOWER(rtf.borough)), 
+		TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_param}) as CHAR(64)) AS zonenamehashkey, 
 	CAST('{now}' AS TIMESTAMP), 
 	TRIM(BOTH FROM TRIM(both '"' FROM LOWER(rtf.borough))) AS borough, 
 	TRIM(BOTH FROM TRIM(both '"' FROM LOWER(rtf."zone"))) AS "zone", 
@@ -26,7 +26,7 @@ WHERE
 	rtf.borough IS NOT NULL AND 
 	rtf."zone" IS NOT NULL AND 
 	rtf.service_zone IS NOT NULL AND 
-	NOT EXISTS (SELECT * FROM raw_vault.satzones_csv s WHERE s.zonenamehashkey = CAST(SHA2(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), 
-		TRIM(BOTH FROM LOWER(rtf.borough)), TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_size})
+	NOT EXISTS (SELECT * FROM raw_vault.satzones_csv s WHERE s.zonenamehashkey = CAST({hash_func}(CONCAT(TRIM(BOTH FROM LOWER(rtf."zone")), 
+		TRIM(BOTH FROM LOWER(rtf.borough)), TRIM(BOTH FROM LOWER(rtf.service_zone))), {hash_param})
 		AS CHAR(64))
 		AND s.loaddate = CAST('{now}' AS TIMESTAMP));

@@ -5,7 +5,7 @@ INSERT INTO raw_vault.hubratecodeids(
 	recordsource)
 	
 SELECT DISTINCT
-	CAST(SHA2(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_size}) AS CHAR(64)) AS ratecodenamehashkey,
+	CAST({hash_func}(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_param}) AS CHAR(64)) AS ratecodenamehashkey,
 	TRIM(BOTH FROM LOWER(rrcf.ratecodename)),
 	CAST('{now}' AS TIMESTAMP),
 	TRIM(BOTH FROM LOWER('{origin}'))
@@ -18,4 +18,4 @@ WHERE
 	NOT EXISTS (SELECT * 
 				FROM raw_vault.hubratecodeids hrc 
 				WHERE 
-					hrc.ratecodenamehashkey = CAST(SHA2(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_size}) AS CHAR(64)));
+					hrc.ratecodenamehashkey = CAST({hash_func}(TRIM(BOTH FROM LOWER(rrcf.ratecodename)), {hash_param}) AS CHAR(64)));

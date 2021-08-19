@@ -10,9 +10,9 @@ INSERT INTO raw_vault.linktrips(
 	recordsource)
 	
 SELECT DISTINCT
-	CAST(SHA2(CONCAT(st.triphashkey, pusz.zonenamehashkey, dosz.zonenamehashkey, 
+	CAST({hash_func}(CONCAT(st.triphashkey, pusz.zonenamehashkey, dosz.zonenamehashkey, 
 		pusz.zonenamehashkey, dosz.zonenamehashkey, sv.vendorhashkey, 
-		src.ratecodenamehashkey, spt.paymenttypehashkey), {hash_size}) AS CHAR(64)) AS linktriphashkey,
+		src.ratecodenamehashkey, spt.paymenttypehashkey), {hash_param}) AS CHAR(64)) AS linktriphashkey,
 	st.triphashkey,
 	pusz.zonenamehashkey,
 	dosz.zonenamehashkey,
@@ -39,6 +39,6 @@ WHERE
 	NOT EXISTS (SELECT * 
 					FROM raw_vault.linktrips l 
 					WHERE 
-						l.linktriphashkey = CAST(SHA2(CONCAT(st.triphashkey, pusz.zonenamehashkey, dosz.zonenamehashkey, 
+						l.linktriphashkey = CAST({hash_func}(CONCAT(st.triphashkey, pusz.zonenamehashkey, dosz.zonenamehashkey, 
 												pusz.zonenamehashkey, dosz.zonenamehashkey, sv.vendorhashkey, 
-												src.ratecodenamehashkey, spt.paymenttypehashkey), {hash_size}) AS CHAR(64)));
+												src.ratecodenamehashkey, spt.paymenttypehashkey), {hash_param}) AS CHAR(64)));

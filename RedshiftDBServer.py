@@ -23,10 +23,11 @@ class RedshiftDBServer(DBServer):
         self.user = secret['username']
         self.port = secret['port']
         self.iam_role = secret['redshift_role']
+        self.host = secret.get('host')
 
         try:
             self.conn = psycopg2.connect(
-                host= self._get_endpoint(secret['dbClusterIdentifier']),
+                host= self.host,
                 dbname= self.db_name,
                 user= self.user,
                 password= secret['password'],

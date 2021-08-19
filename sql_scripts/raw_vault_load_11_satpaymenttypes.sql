@@ -7,7 +7,7 @@ INSERT INTO raw_vault.satpaymenttypes_csv(
 	recordsource)
 
 SELECT DISTINCT
-	CAST(SHA2(TRIM(BOTH FROM LOWER(rptf.paymenttype_name)), {hash_size}) AS CHAR(64)) AS paymenttypehashkey,
+	CAST({hash_func}(TRIM(BOTH FROM LOWER(rptf.paymenttype_name)), {hash_param}) AS CHAR(64)) AS paymenttypehashkey,
 	CAST(rptf.paymenttype_id AS INTEGER),
 	TRIM(BOTH FROM LOWER(rptf.paymenttype_name)),
 	CAST('{now}' AS TIMESTAMP),
@@ -20,5 +20,5 @@ WHERE
 	rptf.paymenttype_id IS NOT NULL AND 
 	rptf.paymenttype_name IS NOT NULL AND 
 	NOT EXISTS (SELECT * FROM raw_vault.satpaymenttypes_csv spt 
-	WHERE spt.paymenttypehashkey = CAST(SHA2(TRIM(BOTH FROM LOWER(rptf.paymenttype_name)), {hash_size}) AS CHAR(64))
+	WHERE spt.paymenttypehashkey = CAST({hash_func}(TRIM(BOTH FROM LOWER(rptf.paymenttype_name)), {hash_param}) AS CHAR(64))
 		AND spt.loaddate = CAST('{now}' AS TIMESTAMP));

@@ -5,7 +5,7 @@ INSERT INTO raw_vault.hubvendors(
 	recordsource)
 
 SELECT DISTINCT
-	CAST(SHA2(TRIM(BOTH FROM LOWER(rvf.vendorname)), {hash_size}) AS CHAR(64)) AS vendorhashkey,
+	CAST({hash_func}(TRIM(BOTH FROM LOWER(rvf.vendorname)), {hash_param}) AS CHAR(64)) AS vendorhashkey,
 	TRIM(BOTH FROM LOWER(rvf.vendorname)),
 	CAST('{now}' AS TIMESTAMP),
 	TRIM(BOTH FROM LOWER('{origin}'))
@@ -18,4 +18,4 @@ WHERE
 	NOT EXISTS (SELECT * 
 					FROM raw_vault.hubvendors hv 
 					WHERE 
-						hv.vendorhashkey = CAST(SHA2(TRIM(BOTH FROM LOWER(rvf.vendorname)), {hash_size}) AS CHAR(64)));
+						hv.vendorhashkey = CAST({hash_func}(TRIM(BOTH FROM LOWER(rvf.vendorname)), {hash_param}) AS CHAR(64)));

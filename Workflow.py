@@ -44,6 +44,8 @@ class Workflow:
 
             flow['now'] = now
             flow['origin'] = self.config.get("data_origin")
+            flow['hash_func'] = self.config.get("db_info").get("hash").get("func")
+            flow['hash_param'] = self.config.get("db_info").get("hash").get("param")
             logging.debug("Flow of type : {}".format(flow.get('type')))
 
             if flow.get('type') == "file_to_rv":
