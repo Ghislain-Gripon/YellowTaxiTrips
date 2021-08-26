@@ -16,7 +16,7 @@ class RedshiftDBServer(DBServer):
 
     @logging_decorator
     def __init__(self, _config):
-        super.__init__(_config)
+        super().__init__(_config)
         self.conn = None
         secret = self._get_secret()
         self.db_name = secret['dbname']
@@ -38,6 +38,7 @@ class RedshiftDBServer(DBServer):
 
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
+            logging.error(err)
             self.conn = None
             raise(err)
 
@@ -52,42 +53,49 @@ class RedshiftDBServer(DBServer):
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.OperationalError(' '.join(err.pgerror))
         
         except psycopg2.DataError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DataError(' '.join(err.pgerror))
 
         except psycopg2.IntegrityError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.IntegrityError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
 
         except psycopg2.ProgrammingError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.ProgrammingError(' '.join(err.pgerror))
 
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except Exception as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise Exception(' '.join(err.pgerror))
 
@@ -104,54 +112,63 @@ class RedshiftDBServer(DBServer):
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.OperationalError(' '.join(err.pgerror))
         
         except psycopg2.DataError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DataError(' '.join(err.pgerror))
 
         except psycopg2.IntegrityError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.IntegrityError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
 
         except psycopg2.ProgrammingError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.ProgrammingError(' '.join(err.pgerror))
 
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except FileNotFoundError as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on {}".format(data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
 
         except PermissionError as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on {}".format(data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
         
         except Exception as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
     
@@ -168,18 +185,21 @@ class RedshiftDBServer(DBServer):
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
         
         except Exception as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise Exception(' '.join(err.args))
         
@@ -229,6 +249,7 @@ class RedshiftDBServer(DBServer):
         else:
             # Decrypts secret using the associated KMS CMK.
             # Depending on whether the secret is a string or binary, one of these fields will be populated.
+            secret = None
             if 'SecretString' in get_secret_value_response:
                 secret = get_secret_value_response['SecretString']
             else:

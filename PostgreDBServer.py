@@ -32,11 +32,13 @@ class PostgreDBServer(DBServer):
 
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
+            logging.error(err)
             self.conn = None
             raise(err)
 
-    @logging_decorator
+    
     @staticmethod
+    @logging_decorator
     def _request_info():
         logging.debug("Workflow.request_info starting.")
         username:str = input('Username: ')
@@ -55,42 +57,49 @@ class PostgreDBServer(DBServer):
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.OperationalError(' '.join(err.pgerror))
         
         except psycopg2.DataError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DataError(' '.join(err.pgerror))
 
         except psycopg2.IntegrityError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.IntegrityError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
 
         except psycopg2.ProgrammingError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.ProgrammingError(' '.join(err.pgerror))
 
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except Exception as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on query : {}".format(query))
+            logging.error(err)
             self.conn.rollback()
             raise Exception(' '.join(err.pgerror))
 
@@ -108,59 +117,68 @@ class PostgreDBServer(DBServer):
         try:
             with open(data_path, 'r', encoding='ascii', errors='ignore') as f: #file stream on data_path for the STDIN canal of the COPY FROM postgre command
                 cur.copy_expert(sql = SQL_STATEMENT.format(table_name, options[pathlib.Path(data_path).suffix]), file=f)
-            logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.db_name, table_name, type(self).__name__))
+            logging.info("{} loaded in {}. {} using {} database.".format(data_path, self.config['db_info']['name'], table_name, type(self).__name__))
 
         except psycopg2.OperationalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.OperationalError(' '.join(err.pgerror))
         
         except psycopg2.DataError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DataError(' '.join(err.pgerror))
 
         except psycopg2.IntegrityError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.IntegrityError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
 
         except psycopg2.ProgrammingError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.ProgrammingError(' '.join(err.pgerror))
 
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except FileNotFoundError as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on {}".format(data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
 
         except PermissionError as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on {}".format(data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
         
         except Exception as err:
             logging.error("Error type : " + type(err).__name__)
             logging.error("Error on copy from {} to {}".format(table_name, data_path))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DBError(' '.join(err.args))
     
@@ -177,18 +195,21 @@ class PostgreDBServer(DBServer):
         except psycopg2.DatabaseError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.DatabaseError(' '.join(err.pgerror))
 
         except psycopg2.InternalError as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise DBServerError.InternalError(' '.join(err.pgerror))
         
         except Exception as err:
             logging.error(self._log_psycopg2_exception(err))
             logging.error("An error happened while retrieving the current time from the database. {}".format(err))
+            logging.error(err)
             self.conn.rollback()
             raise Exception(' '.join(err.args))
         
@@ -200,8 +221,8 @@ class PostgreDBServer(DBServer):
         self.conn.close()
         
     # define a function that handles and parses psycopg2 exceptions
-    @logging_decorator
     @staticmethod
+    @logging_decorator
     def _log_psycopg2_exception(err) -> str:
         # get details about the exception
         err_type, err_obj, traceback = sys.exc_info()

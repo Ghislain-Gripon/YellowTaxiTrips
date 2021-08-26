@@ -20,7 +20,7 @@ execution_environment:
             engine: RedshiftDBServer
             name: yellowtaxitrips
             port: 5439
-            table_name: staging_area.raw{rv_object}file_{ext}
+            table_name: "staging_area.raw{rv_object}file_{ext}"
             secret_name: redshiftqueryeditor-ggripon-taxitrip_cluster_secret
             hash:
                 func: SHA2
@@ -41,7 +41,8 @@ execution_environment:
                 directories:
                     config: config
                     sql_scripts: sql_scripts
-                    flows: config
+                    environment_specific: Postgre_specific
+                    flows: flows
                 files:
                     logger_config_path: logger_config.yaml
                     flows_path: flows.yaml
@@ -50,7 +51,7 @@ execution_environment:
             server: localhost
             name: YellowTaxiTrips
             port: 5432
-            table_name: staging_area.raw{rv_object}file_{ext}
+            table_name: "staging_area.raw{rv_object}file_{ext}"
             hash:
                 func: DIGEST
                 param: "'sha256'"

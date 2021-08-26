@@ -7,14 +7,14 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO
+    level: DEBUG
     formatter: simple
     stream: ext://sys.stdout
   file:
     class: logging.FileHandler
-    level: INFO
+    level: DEBUG
     formatter: simple
     filename: ./logs.log
 root:
-  level: INFO
-  handlers: [console,file]
+  level: DEBUG
+  handlers: [console, file]

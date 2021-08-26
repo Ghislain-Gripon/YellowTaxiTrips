@@ -7,7 +7,7 @@ def logging_decorator(func):
                 args = ''
             if kwargs is None:
                 kwargs = ''
-            logging.debug('{} run with {} {} arguments.'.format(func.__name__, ' '.join(args), ' '.join(kwargs)))
+            logging.debug('{} run with {} {} arguments.'.format(func.__name__, ' '.join(str(args)), ' '.join(str(kwargs)) ))
             val = func(*args, **kwargs)
             logging.debug('{} returned {} .'.format(func.__name__, val))
             return val

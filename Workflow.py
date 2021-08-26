@@ -35,7 +35,7 @@ class Workflow:
         logging.debug("Running flows from flow file.")
         
 
-        self.db_server:DBServer = self.get_connection()
+        self.db_server:DBServer = self.get_db_server_class()(self.config)
         now = self.db_server.get_now()
         
         logging.info("Iterating over flows.")
@@ -46,7 +46,7 @@ class Workflow:
             flow['origin'] = self.config.get("data_origin")
             flow['hash_func'] = self.config.get("db_info").get("hash").get("func")
             flow['hash_param'] = self.config.get("db_info").get("hash").get("param")
-            logging.debug("Flow of type : {}".format(flow.get('type')))
+            logging.info("Flow of type : {}".format(flow.get('type')))
 
             if flow.get('type') == "file_to_rv":
 
@@ -113,7 +113,13 @@ class Workflow:
                 for sql_script in flow.get("sql"):
                     try:
 
-                        sql_script_path = '{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script)
+                        environment_specific = self.config.get('data_directory_path').get('config').get('directories').get('environment_specific')
+                        if environment_specific is None:
+                            environment_specific = ''
+                        else:
+                            environment_specific += '/'
+
+                        sql_script_path = '{}/{}'.format(self.FileHandler.sql_scripts_path, sql_script.format(environment_specific = environment_specific))
                         sql_script_file = self.FileHandler.load(sql_script_path)
                         
                         self.db_server.execSQL(sql_script_file.format_map(flow))
@@ -133,7 +139,7 @@ class Workflow:
 
                     except DBServerError.ProgrammingError as err:
                         logging.error("Error with the file handling. File : {}, Error: {}".format(sql_script_path, err))
-                        logging.error("Error type : " + type(err).__name__, str(err.args))  
+                        logging.error("Error type : " + type(err).__name__, str(err.args)) 
 
                     except DBServerError.InternalError as err:
                         logging.error("Error with the file handling. File : {}, Error: {}".format(sql_script_path, err))
@@ -157,7 +163,8 @@ class Workflow:
 
                     except Exception as err:
                         logging.error("Error with file handling at {}.".format(sql_script_path))
-                        logging.error("Error type : " + type(err).__name__, str(err.args))  
+                        logging.error("Error type : " + type(err).__name__, str(err.args))
+                        logging.error(err)
 
             else:
                 logging.warning("Flow type is not recognized.")
@@ -166,15 +173,15 @@ class Workflow:
         self.db_server.closeConn()
 
     @logging_decorator
-    def get_connection(self, ) -> DBServer:
+    def get_db_server_class(self, ) -> DBServer:
         """
-        retrieve the database class instance object
+        retrieve the database class object for instanciation
         """
                 
         try:
             return {
-                'PostgreDBServer': PostgreDBServer(self.config),
-                'RedshiftDBServer': RedshiftDBServer(self.config)
+                'PostgreDBServer': PostgreDBServer,
+                'RedshiftDBServer': RedshiftDBServer
             }[self.config['db_info']['engine']]
 
         except DBServerError.OperationalError as err:

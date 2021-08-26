@@ -5,6 +5,7 @@ import logging
 import logging.config
 import yaml
 import re
+from FolderStructure import FolderStructure
 from Decorator import logging_decorator
 
 #class description here
@@ -15,7 +16,7 @@ from Decorator import logging_decorator
 #request the file to be copied locally then return the path to the copy from the S3 bucket
 
 #class version : local file system
-class FolderStructureLocal:
+class FolderStructureLocal(FolderStructure):
 
     @logging_decorator
     def __init__(self, **kwargs):
@@ -23,7 +24,7 @@ class FolderStructureLocal:
         if self.root_path is None:
             self.root_path:pathlib.Path = pathlib.Path.cwd()
         self.config_file_path:str = kwargs.get('config_file_path')
-        if self.rooconfig_file_patht_path is None:
+        if self.config_file_path is None:
             self.config_file_path:pathlib.Path = pathlib.Path('config/config.yaml')
         self.file_directories = {}
         self.config:dict = self.load(self.config_file_path)['execution_environment']['local']
@@ -36,7 +37,8 @@ class FolderStructureLocal:
         logging.config.dictConfig(self.load('{}/{}'.format(self.config['data_directory_path']['config']['directories']['config'], 
             self.config['data_directory_path']['config']['files']['logger_config_path'])))
 
-        logging.info("Loaded logger yaml configuration at {}".format(self.config["logger_config_path"]))
+        logging.info("Loaded logger yaml configuration at {}".format('{}/{}'.format(self.config['data_directory_path']['config']['directories']['config'], 
+            self.config['data_directory_path']['config']['files']['logger_config_path'])))
 
         self.flows:dict = self.load('{}/{}'.format(self.config['data_directory_path']['config']['directories']['flows'], 
             self.config['data_directory_path']['config']['files']['flows_path']))
@@ -95,11 +97,11 @@ class FolderStructureLocal:
     def load(self, file_path:str):
         _file = None
         path:pathlib.Path = pathlib.Path(self.root_path) / file_path
-        if self.check_for_file(path):    
-            _file = open(path, 'r')
+        if self._check_for_file(path):    
+            _file = open(str(path), 'r')
         else:
             logging.warning("No file located at {}".format(file_path))
-            raise FileNotFoundError("There is not file at {}".format(path))
+            raise FileNotFoundError("There is no file at {}".format(path))
 
         if pathlib.Path(file_path).suffix == '.yaml':
             return self.read_yaml(_file)

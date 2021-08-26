@@ -2,7 +2,6 @@
 #-*- coding: utf-8 -*-
 
 import logging
-import pathlib
 from FolderStructureAWS import FolderStructureAWS
 from FolderStructure import FolderStructure
 from FolderStructureLocal import FolderStructureLocal
@@ -20,7 +19,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
 # execute only if run as a script
-    FileHandler:FolderStructure = FolderStructureLocal(pathlib.Path.cwd(), config_file_path = "config/config.yaml")
+    FileHandler:FolderStructure = FolderStructureLocal(config_file_path = "config/config.yaml")
     Workflow(FileHandler)
 
 
