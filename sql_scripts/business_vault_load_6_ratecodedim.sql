@@ -1,20 +1,14 @@
--- CONNECTION: name=postgres
-DO $$
-DECLARE
+INSERT INTO business_vault.ratecodedim(
+	ratecodeid, 
+	ratecodename)
 
-	time_now timestamp := CAST('{now}' AS TIMESTAMP);
+SELECT DISTINCT 
+	ratecodeid, 
+	TRIM(BOTH FROM LOWER(ratecodename)) AS "ratecodename"
 
-BEGIN
+FROM raw_vault.satratecodeids_csv
 
-	INSERT INTO business_vault.ratecodedim(
-		ratecodeid, 
-		ratecodename)
-	SELECT DISTINCT 
-		ratecodeid, 
-		TRIM(BOTH FROM LOWER(ratecodename)) AS "ratecodename"
-	FROM raw_vault.satratecodeids_csv
-	WHERE loadenddate > time_now
-	ORDER BY 
-		ratecodeid ASC;
-		
-END $$;
+WHERE loadenddate > CAST('{now}' AS TIMESTAMP)
+
+ORDER BY 
+	ratecodeid ASC;

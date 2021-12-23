@@ -1,17 +1,58 @@
-data_directory_path:
-    base_path: data
-    directories: 
-        - inbound
-        - work
-        - error
-        - done
-    sql_scripts: sql_scripts
-db_info:
-    engine: PostgreDBServer
-    server: localhost
-    name: YellowTaxiTrips
-    port: 5432
-    table_name: staging_area.raw{rv_object}file_{ext}
-logger_config_path: config/logger_config.yaml
-flows_path: config/flows.yaml
+#data_origin -> origin of the records, to be changed according to system of origin
+
+execution_environment:
+    aws:
+        region: 'eu-west-3'
+        data_origin: 'csv'
+        data_directory_path:
+            data:
+                bucket: ggriponstagebucket
+            config:
+                bucket: postgretaxiconfig
+                directories:
+                    config: config
+                    sql_scripts: sql_scripts
+                    flows: flows
+                files:
+                    logger_config_path: logger_config.yaml
+                    flows_path: flows.yaml
+        db_info:
+            engine: RedshiftDBServer
+            name: yellowtaxitrips
+            port: 5439
+            table_name: "staging_area.raw{rv_object}file_{ext}"
+            secret_name: redshiftqueryeditor-ggripon-taxitrip_cluster_secret
+            hash:
+                func: SHA2
+                param: 256
+
+
+    local:
+        data_origin: 'csv'
+        data_directory_path:
+            data:
+                base_path: data
+                directories:
+                    - inbound
+                    - work
+                    - error
+                    - done
+            config:
+                directories:
+                    config: config
+                    sql_scripts: sql_scripts
+                    environment_specific: Postgre_specific
+                    flows: flows
+                files:
+                    logger_config_path: logger_config.yaml
+                    flows_path: flows.yaml
+        db_info:
+            engine: PostgreDBServer
+            server: localhost
+            name: YellowTaxiTrips
+            port: 5432
+            table_name: "staging_area.raw{rv_object}file_{ext}"
+            hash:
+                func: DIGEST
+                param: "'sha256'"
 

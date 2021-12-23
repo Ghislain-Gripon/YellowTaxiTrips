@@ -1,18 +1,12 @@
--- CONNECTION: name=postgres
-DO $$
-DECLARE
+INSERT INTO business_vault.service_zonedim(
+	service_zonename) 
 
-	time_now timestamp := CAST('{now}' AS TIMESTAMP);
+SELECT DISTINCT 
+	TRIM(BOTH FROM LOWER(service_zone)) AS "service_zone"
 
-BEGIN
+FROM raw_vault.satzones_csv
 
-	INSERT INTO business_vault.service_zonedim(
-		service_zonename) 
-	SELECT DISTINCT 
-		TRIM(BOTH FROM LOWER(service_zone)) AS "service_zone"
-	FROM raw_vault.satzones_csv
-	WHERE loadenddate > time_now
-	ORDER BY
-		service_zone ASC;
-	
-END $$;
+WHERE loadenddate > CAST('{now}' AS TIMESTAMP)
+
+ORDER BY
+	service_zone ASC;

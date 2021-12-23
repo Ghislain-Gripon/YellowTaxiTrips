@@ -1,18 +1,12 @@
--- CONNECTION: name=postgres
-DO $$
-DECLARE
+INSERT INTO business_vault.boroughdim(
+	boroughname)
 
-	time_now timestamp := CAST('{now}' AS TIMESTAMP);
+SELECT DISTINCT
+	TRIM(BOTH FROM LOWER(borough)) AS "borough"
 
-BEGIN
+FROM raw_vault.satzones_csv
 
-	INSERT INTO business_vault.boroughdim(
-		boroughname)
-	SELECT
-		DISTINCT TRIM(BOTH FROM LOWER(borough)) AS "borough"
-	FROM raw_vault.satzones_csv
-	WHERE loadenddate > time_now
-	ORDER BY 
-		borough ASC;
-		
-END $$;
+WHERE loadenddate > CAST('{now}' AS TIMESTAMP)
+
+ORDER BY 
+	borough ASC;

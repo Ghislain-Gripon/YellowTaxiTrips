@@ -1,23 +1,17 @@
--- CONNECTION: name=postgres
-DO $$
-DECLARE
+INSERT INTO business_vault.service_zone_borough_correspondance(
+	service_zoneid, 
+	boroughid)
 
-	time_now timestamp := CAST('{now}' AS TIMESTAMP);
+SELECT DISTINCT 
+	service_zoneid,
+	boroughid
 
-BEGIN
+FROM raw_vault.satzones_csv 
+	INNER JOIN business_vault.boroughdim ON borough = boroughname
+	INNER JOIN business_vault.service_zonedim ON service_zonename = service_zone
 
-	INSERT INTO business_vault.service_zone_borough_correspondance(
-		service_zoneid, 
-		boroughid)
-	SELECT DISTINCT 
-		service_zoneid,
-		boroughid
-	FROM raw_vault.satzones_csv 
-		INNER JOIN business_vault.boroughdim ON borough = boroughname
-		INNER JOIN business_vault.service_zonedim ON service_zonename = service_zone
-	WHERE loadenddate > time_now
-	ORDER BY 
-		service_zoneid ASC, 
-		boroughid ASC;
+WHERE loadenddate > CAST('{now}' AS TIMESTAMP)
 
-END $$;
+ORDER BY 
+	service_zoneid ASC, 
+	boroughid ASC;

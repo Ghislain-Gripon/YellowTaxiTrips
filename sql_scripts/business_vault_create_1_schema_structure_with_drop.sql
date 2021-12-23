@@ -1,0 +1,2 @@
+DROP SCHEMA IF EXISTS business_vault CASCADE;
+CREATE SCHEMA IF NOT EXISTS business_vault;
